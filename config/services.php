@@ -41,6 +41,8 @@ return [
 
     'mindinabox' => [
         'api_key' => env('MINDINABOX_API_KEY'),
+        'base_uri' => env('MINDINABOX_BASE_URI'),
+        'model' => env('MINDINABOX_MODEL'),
     ],
 
 ];

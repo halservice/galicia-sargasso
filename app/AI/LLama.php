@@ -3,6 +3,7 @@
 namespace App\AI;
 
 use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 
 class LLama
@@ -24,26 +25,31 @@ class LLama
      */
     public function send(string $message): string
     {
-
         try {
             $this->messages[] = [
                 'role' => 'user',
                 'content' => $message,
             ];
 
-            ds('Sending request with messages:', $this->messages);
-
-            $response = Http::withToken(config('services.mindinabox.api_key'))
-                ->post("https://astro-llama.internal.mindinabox.io/v1", [
+                $response = Http::withToken(config('services.mindinabox.api_key'))
+                ->post("https://astro-llama.internal.mindinabox.io/v1/chat/completions", [
                     'model' => 'meta-llama/Llama-3.1-8B-Instruct',
                     'messages' => $this->messages,
                 ])
                 ->json();
 
-            ds('Raw API response:', $response);
+//            /** @var Response $response */
+//            $response = Http::mindinabox()->post('chat/completions', [
+//                'messages' => $this->messages,
+//            ]);
+
+//            dd($response->json());
+//            if ($response->failed()) {
+//                return '';
+//            }
+
 
             $responseContent = $response['choices'][0]['message']['content'];
-            ds($responseContent);
 
             $this->messages[] = [
                 'role' => 'assistant',

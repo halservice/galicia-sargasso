@@ -2,7 +2,6 @@ import { displayMessage } from './utils/messageUtils';
 
 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 const submitButton = document.querySelector('#submit-btn');
-const output = document.querySelector('#chat-messages');
 const input = document.querySelector('#user-input');
 
 async function getMessage(userMessage) {

@@ -1,56 +1,15 @@
 <?php
 
-use App\AI\ChatGPT;
-use App\AI\LLama;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Route;
+use Livewire\Volt\Volt;
 
-Route::get('/', function () {
-    return view('welcome',[
-        'name' => 'Chiara',
-    ]);
-});
+Volt::route('/','home')->name('home');
 
-Route::get('/SourceCodeGeneration', function () {
-    return view('sourceCodeGenerator');
-});
+Volt::route('/source-code-generator', 'source-code-generator')->name('source-code-generator');
 
-Route::get('/FormalModelGeneration', function () {
-    return view('formalModelGenerator');
-});
+Volt::route('/formal-model-generator', 'formal-model-generator')->name('formal-model-generator');
 
-Route::get('/CodeVerification', function () {
-    return view('codeVerification');
-});
+Volt::route('/code-verification', 'code-verification')->name('code-verification');
 
-Route::get('/Feedback', function () {
-    return view('feedback');
-});
+Volt::route('/feedback', 'feedback')->name('feedback');
 
-Route::get('/Customization', function () {
-    return view('customization');
-});
-
-Route::post('/generate', function (Request $request) {
-    $validated = $request->validate([
-        'user_input' => 'required|string',
-        'programming_language' => 'required|string',
-        'llm_code' => 'required|string',
-    ]);
-
-    if($validated['llm_code'] === 'chatgpt') {
-        $chat = new ChatGPT();
-        $code = $chat
-            ->systemMessage("You are an expert programmer. Generate clean and secure code based on user requirements using the following programming language " . $validated['programming_language'] . "You must provide only the code in appropriate code blocks, explanations aren't required. Format your response using markdown. ")
-            ->send($validated['user_input']);
-    } elseif ($validated['llm_code'] === 'llama') {
-        $chat = new LLama();
-        $code = $chat
-            ->systemMessage("You are an expert programmer. Generate clean and secure code based on user requirements using the following programming language " . $validated['programming_language'] . "Always output code in appropriate code blocks with language specification. Format your response using markdown. You must provide only the code, explanations aren't required.")
-            ->send($validated['user_input']);
-    }
-
-    return response()->json(['message' => $code]);
-
-});
+Volt::route('/settings', 'settings')->name('settings');

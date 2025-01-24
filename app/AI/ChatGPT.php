@@ -32,6 +32,7 @@ class ChatGPT
 
             ds('Sending request with messages:', $this->messages);
 
+
             $response = Http::withToken(config('services.openai.api_key'))
                 ->post("https://api.openai.com/v1/chat/completions", [
                     'model' => "gpt-4",
