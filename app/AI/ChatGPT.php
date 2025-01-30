@@ -7,51 +7,40 @@ use Illuminate\Support\Facades\Http;
 
 class ChatGPT
 {
-    protected array $messages = [];
-
-    public function systemMessage(string $message): static
+    public function systemMessage(string $sys_message, string $usr_message): array
     {
-        $this->messages[] = [
+        return [
+            [
             'role' => 'system',
-            'content' => $message,
+            'content' => $sys_message,
+            ],[
+                'role' => 'user',
+                'content' => $usr_message,
+            ]
         ];
 
-        return $this;
     }
 
     /**
      * @throws ConnectionException
      */
-    public function send(string $message): string
+    public function send(array $message): string
     {
-        try {
-            $this->messages[] = [
-                'role' => 'user',
-                'content' => $message,
-            ];
-
-            ds('Sending request with messages:', $this->messages);
-
-
+        try{
             $response = Http::withToken(config('services.openai.api_key'))
                 ->post("https://api.openai.com/v1/chat/completions", [
-                    'model' => "gpt-4",
-                    'messages' => $this->messages,
+                    'model' => "gpt-4o-mini",
+                    'messages' => $message,
                 ])
                 ->json();
 
-            $responseContent = $response['choices'][0]['message']['content'];
-            $this->messages[] = [
-                'role' => 'assistant',
-                'content' => $responseContent,
-            ];
-
-            return $responseContent;
+            return $response['choices'][0]['message']['content'];
 
         } catch (\Exception $e) {
             ds('Error in ChatGPT:', $e->getMessage());
             throw $e;
         }
+
     }
 
 }

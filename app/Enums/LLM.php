@@ -10,4 +10,5 @@ enum LLM: string
 
     case ChatGPT = 'chat-gpt';
     case Llama = 'llama';
+    case Let_LMM_Decide = 'let-lmm';
 }

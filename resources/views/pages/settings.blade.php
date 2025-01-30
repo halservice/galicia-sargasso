@@ -24,6 +24,8 @@ new class extends \Livewire\Volt\Component {
     #[Validate('required|string')]
     public string $llm_validation;
 
+    #[Validate('required|int')]
+    public int $iteration;
 
     protected ?CodeGeneratorSettings $settings = null;
 
@@ -39,6 +41,7 @@ new class extends \Livewire\Volt\Component {
         $this->llm_code = $this->settings->llm_code;
         $this->llm_formal = $this->settings->llm_formal;
         $this->llm_validation = $this->settings->llm_validation;
+        $this->iteration = $this->settings->iteration;
     }
 
     public function with(): array
@@ -47,7 +50,6 @@ new class extends \Livewire\Volt\Component {
             'languages' => ProgrammingLanguage::options(),
             'models' => ModelTool::options(),
             'llms' => LLM::options(),
-//            'llmf' => LLMFormal::options(),
         ];
     }
 
@@ -58,6 +60,7 @@ new class extends \Livewire\Volt\Component {
         $this->settings->llm_code = $this->llm_code;
         $this->settings->llm_formal = $this->llm_formal;
         $this->settings->llm_validation = $this->llm_validation;
+        $this->settings->iteration = $this->iteration;
 
         $this->settings->save();
     }
@@ -66,6 +69,10 @@ new class extends \Livewire\Volt\Component {
 
 <x-card title="Customization Options"
         subtitle="Allow users to customize the maximum number of iterations for the code refinement." shadow separator>
+
+{{--    <input wire:model.live.debounce.500ms="test" />--}}
+
+{{--    {{ $test }}--}}
 
     <x-form wire:submit="save" no-separator>
         <x-select
@@ -104,6 +111,12 @@ new class extends \Livewire\Volt\Component {
             option-label="text"
         />
 
+        <x-input
+            label="Insert the number of iteration for the validation process"
+            wire:model="iteration"
+            placeholder="Write a number..."
+        />
+
         <x-select
             label="Select a LLM for the validation"
             wire:model="llm_validation"
@@ -120,56 +133,4 @@ new class extends \Livewire\Volt\Component {
 </x-card>
 
 
-{{--<div>--}}
-{{--    <x-header--}}
-{{--        description='Allow users to customize the maximum number of iterations for the code refinement.'>--}}
-{{--        Customization Options--}}
-{{--    </x-header>--}}
 
-{{--    <div>--}}
-{{--        <h1>{{ $count }}</h1>--}}
-{{--        <button wire:click="increment">+</button>--}}
-{{--    </div>--}}
-
-{{--    <div class="bg-white w-[800px] w-min[400px] text-align-left py-3 px-3 rounded-[10px]">--}}
-{{--        <x-select-info id="programming-language-tool-select" label="Select a programming language:" placeholder="Select a language.."--}}
-{{--            :options="$languages"--}}
-{{--        />--}}
-
-{{--        <x-select-info id="model-tool-select" label="Select formal model tool:" placeholder="Select a tool..."--}}
-{{--                       :options="$model"--}}
-{{--        />--}}
-
-{{--        <x-select-info id="number-iteration-tool-select" label="Select the number of iterations:" placeholder="Select a number"--}}
-{{--                       :options="[--}}
-{{--            '1' => '1',--}}
-{{--            '2' => '2',--}}
-{{--            '3' => '3',--}}
-{{--            '4' => '4',--}}
-{{--            '5' => '5',--}}
-{{--        ]"--}}
-{{--        />--}}
-
-{{--        <x-select-info id="llm-code-tool-select" label="Select the LLM for generating the code:" placeholder="Select a LLM..."--}}
-{{--                       :options="[--}}
-{{--            'chatgpt' => 'ChatGPT',--}}
-{{--            'llama'=> 'Llama-3.1',--}}
-{{--        ]"--}}
-{{--        />--}}
-
-{{--        <x-select-info id="llm-formal-tool-select" label="Select the LLM for generating the formal model:" placeholder="Select a LLM..."--}}
-{{--                       :options="[--}}
-{{--            'chatgpt' => 'ChatGPT',--}}
-{{--            'llama'=> 'Llama-3.1',--}}
-{{--        ]"--}}
-{{--        />--}}
-
-{{--        <x-select-info id="llm-validation-tool-select" label="Select the LLM for validating the code:" placeholder="Select a LLM..."--}}
-{{--                       :options="[--}}
-{{--            'chatgpt' => 'ChatGPT',--}}
-{{--            'llama'=> 'Llama-3.1',--}}
-{{--        ]"--}}
-{{--        />--}}
-
-{{--    </div>--}}
-{{--</div>--}}

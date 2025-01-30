@@ -7,121 +7,79 @@ use App\Enums\LLMFormal;
 use App\Enums\ModelTool;
 use App\Settings\CodeGeneratorSettings;
 use Livewire\Attributes\Validate;
+use App\GeneratedCode;
+use App\GeneratedFormalModel;
+use App\GeneratedValidatedCode;
 
 new class extends \Livewire\Volt\Component {
-    #[Validate('required|string')]
-    public string $language;
 
-    #[Validate('required|string')]
-    public string $model;
+    public string $req;
+    public string $first_code;
+    public string $formal_model;
 
-    #[Validate('required|string')]
-    public string $llm_code;
-
-    #[Validate('required|string')]
-    public string $llm_formal;
-
-    #[Validate('required|string')]
-    public string $llm_validation;
-
+    public bool $showDrawer = false;
+    public bool $showDrawer2 = false;
 
     protected ?CodeGeneratorSettings $settings = null;
+    protected ?GeneratedCode $generatedCode = null;
+    protected ?GeneratedFormalModel $generatedFormal = null;
+    protected ?GeneratedValidatedCode $generatedValidation = null;
 
     public function boot(): void
     {
-        $this->settings = app(CodeGeneratorSettings::class);
+        if (session('feedback_validation_id')) {
+            $this->generatedValidation = session('feedback_validation_id');
+            $this->generatedValidation = app(GeneratedValidatedCode::class)->find($this->validationId);
+
+            $this->generated_code = app(GeneratedCode::class)->find($this->generatedValidation->generated_code_id);
+            $this->req = $this->generated_code->requirement;
+            $this->first_code = $this->generated_code->generated_code;
+
+            $this->generated_formal = app(GeneratedFormalModel::class)->find($this->generatedValidation->generated_formal_id);
+            $this->formal_model = $this->generated_formal->generated_formal_model;
+
+            $this->settings = app(CodeGeneratorSettings::class);
+        }
+
     }
 
     public function mount(): void
     {
-        $this->language = $this->settings->programming_language;
-        $this->model = $this->settings->model_tool;
-        $this->llm_code = $this->settings->llm_code;
-        $this->llm_formal = $this->settings->llm_formal;
-        $this->llm_validation = $this->settings->llm_validation;
+//        $this->request = $this->settings->programming_language;
     }
 
-    public function with(): array
-    {
-        return [
-            'languages' => ProgrammingLanguage::options(),
-            'models' => ModelTool::options(),
-            'llms' => LLM::options(),
-//            'llmf' => LLMFormal::options(),
-        ];
-    }
-
-    public function save(): void
-    {
-        $this->settings->programming_language = $this->language;
-        $this->settings->model_tool = $this->model;
-        $this->settings->llm_code = $this->llm_code;
-        $this->settings->llm_formal = $this->llm_formal;
-        $this->settings->llm_validation = $this->llm_validation;
-
-        $this->settings->save();
-    }
-} ?>
+}
+?>
 
 
-<x-card title="Customization Options"
-        subtitle="Allow users to customize the maximum number of iterations for the code refinement." shadow separator>
+<x-card title="Feedback"
+        subtitle="Provide detailed feedback on the correctness and compliance of the generated code." shadow separator>
+
+<x-form>
+    @if(session('feedback_validation_id'))
+    <h1 class="text-primary text-2xl font-bold">Summarization:</h1>
+    <p>The user request was the following:</p>
+    <i><b>
+       {{ $req }}
+        </b></i>
+    <x-drawer wire:model="showDrawer" class="w-11/12 lg:w-1/3" right>
+        <div><pre><code>{{ $first_code }}</code></pre><br></div>
+        <x-button label="Close" @click="$wire.showDrawer = false" />
+    </x-drawer>
+    <x-drawer wire:model="showDrawer2" class="w-11/12 lg:w-1/3" right>
+        <div><pre><code>{{ $formal_model }}</code></pre><br></div>
+        <x-button label="Close" @click="$wire.showDrawer2 = false" />
+    </x-drawer>
+    <div class="flex justify-left w-full gap-5">
+        <x-button label="Show First Generated Code" wire:click="$toggle('showDrawer')" />
+        <x-button label="Show Formal Model" wire:click="$toggle('showDrawer2')" />
+    </div>
+    @else
+        <p>You must progress with the process first.</p>
+    @endif
 
 
+
+</x-form>
 
 </x-card>
-
-
-{{--<div>--}}
-{{--    <x-header--}}
-{{--        description='Allow users to customize the maximum number of iterations for the code refinement.'>--}}
-{{--        Customization Options--}}
-{{--    </x-header>--}}
-
-{{--    <div>--}}
-{{--        <h1>{{ $count }}</h1>--}}
-{{--        <button wire:click="increment">+</button>--}}
-{{--    </div>--}}
-
-{{--    <div class="bg-white w-[800px] w-min[400px] text-align-left py-3 px-3 rounded-[10px]">--}}
-{{--        <x-select-info id="programming-language-tool-select" label="Select a programming language:" placeholder="Select a language.."--}}
-{{--            :options="$languages"--}}
-{{--        />--}}
-
-{{--        <x-select-info id="model-tool-select" label="Select formal model tool:" placeholder="Select a tool..."--}}
-{{--                       :options="$model"--}}
-{{--        />--}}
-
-{{--        <x-select-info id="number-iteration-tool-select" label="Select the number of iterations:" placeholder="Select a number"--}}
-{{--                       :options="[--}}
-{{--            '1' => '1',--}}
-{{--            '2' => '2',--}}
-{{--            '3' => '3',--}}
-{{--            '4' => '4',--}}
-{{--            '5' => '5',--}}
-{{--        ]"--}}
-{{--        />--}}
-
-{{--        <x-select-info id="llm-code-tool-select" label="Select the LLM for generating the code:" placeholder="Select a LLM..."--}}
-{{--                       :options="[--}}
-{{--            'chatgpt' => 'ChatGPT',--}}
-{{--            'llama'=> 'Llama-3.1',--}}
-{{--        ]"--}}
-{{--        />--}}
-
-{{--        <x-select-info id="llm-formal-tool-select" label="Select the LLM for generating the formal model:" placeholder="Select a LLM..."--}}
-{{--                       :options="[--}}
-{{--            'chatgpt' => 'ChatGPT',--}}
-{{--            'llama'=> 'Llama-3.1',--}}
-{{--        ]"--}}
-{{--        />--}}
-
-{{--        <x-select-info id="llm-validation-tool-select" label="Select the LLM for validating the code:" placeholder="Select a LLM..."--}}
-{{--                       :options="[--}}
-{{--            'chatgpt' => 'ChatGPT',--}}
-{{--            'llama'=> 'Llama-3.1',--}}
-{{--        ]"--}}
-{{--        />--}}
-
-{{--    </div>--}}
-{{--</div>--}}
