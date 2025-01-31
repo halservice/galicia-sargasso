@@ -1,5 +1,4 @@
 import defaultTheme from 'tailwindcss/defaultTheme';
-import daisyui from "daisyui";
 
 /** @type {import('tailwindcss').Config} */
 export default {
@@ -11,11 +10,17 @@ export default {
 		 './resources/**/*.vue',
 		 "./vendor/robsontenorio/mary/src/View/Components/**/*.php"
 	],
-
+    daisyui: {
+        themes: ["cmyk","night"], // false: only light + dark | true: all themes | array: specific themes like this ["light", "dark", "cupcake"]
+        darkTheme: "night", // name of one of the included themes for dark mode
+        base: true, // applies background color and foreground color for root element by default
+        styled: true, // include daisyUI colors and design decisions for all components
+        utils: true, // adds responsive and modifier utility classes
+        prefix: "", // prefix for daisyUI classnames (components, modifiers and responsive class names. Not colors)
+        logs: true, // Shows info about daisyUI version and used config in the console when building your CSS
+        themeRoot: ":root", // The element that receives theme color CSS variables
+    },
     theme: {
-        daisyui: {
-            themes: ["cupcake"],
-        },
         extend: {
             fontFamily: {
                 sans: ['Figtree', ...defaultTheme.fontFamily.sans],
@@ -28,32 +33,30 @@ export default {
     //         //         '200': '#212529',
     //         //     },
     //         // },
-
+    //
         },
     },
     plugins: [
-        daisyui
-        ],
-        // function({addComponents}){addComponents({'.chat-message':{backgroundColor:'#f3f3f9',
-		// borderRadius:'10px',
-		// padding:'15px',
-        // gap: '5px',
-		// maxWidth:'65%',
-		// },
-		// '.user-message':{marginLeft:'auto',
-        // marginBottom: '10px',
-		// backgroundColor:'#fab387',
-		// color:'#1e1e2e',
-        // width:'fit-content',
-        // wordWrap:'break-word',
-		// },
-		// '.assistant-message':{marginRight:'auto',
-        // marginBottom: '10px',
-        // backgroundColor:'#1a1d21',
-		// color:'#f3f3f9',
-        // width:'fit-content',
-        // wordWrap:'break-word',
-		// },
+        function({addComponents}){addComponents({'.chat-message':{backgroundColor:'#f3f3f9',
+		borderRadius:'10px',
+		padding:'15px',
+        gap: '5px',
+		maxWidth:'65%',
+		},
+		'.user-message':{marginLeft:'auto',
+        marginBottom: '10px',
+		backgroundColor:'#fab387',
+		color:'#1e1e2e',
+        width:'fit-content',
+        wordWrap:'break-word',
+		},
+		'.assistant-message':{marginRight:'auto',
+        marginBottom: '10px',
+        backgroundColor:'#1a1d21',
+		color:'#f3f3f9',
+        width:'fit-content',
+        wordWrap:'break-word',
+		},
 		// // '.assistant-messagecode':{backgroundColor:'#ffffff',
 		// // color:'#ffffff',
 		// // borderRadius:'4px',
@@ -78,6 +81,7 @@ export default {
 		// // margin:'0.5em0',
 		// // paddingLeft:'1em',
 		// // },
-		// });},
-	// ],
+		});},
+        require("daisyui"),
+	],
 };
