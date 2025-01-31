@@ -19,7 +19,6 @@ new class extends \Livewire\Volt\Component {
     #[Locked]
     public string $result;
 
-    #[Locked]
     public string $req;
 
     protected ?CodeGeneratorSettings $settings = null;
@@ -100,7 +99,7 @@ new class extends \Livewire\Volt\Component {
     @if(session('last_generated_code_id'))
         <x-form wire:submit="send" no-separator class="flex flex-col items-center justify-center">
             @if(!session('last_formal_model_id'))
-                <h2 class="text-center font-bold text-2xl text-gray-400 ">Would you like to generate the formal
+                <h2 class="text-center font-bold text-2xl">Would you like to generate the formal
                     model?</h2>
                 <x-slot:actions>
                     <div class="flex justify-center w-full">
@@ -111,13 +110,13 @@ new class extends \Livewire\Volt\Component {
                     </div>
                 </x-slot:actions>
             @else
-                <h2 class="text-center font-bold text-2xl text-gray-400 ">Formal Model Generated.</h2>
-                <p class="text-center text-gray-300">Please, continue with the generation of the validated code.</p>
+                <h2 class="text-center font-bold text-2xl ">Formal Model Generated.</h2>
+                <p class="text-center ">Please, continue with the generation of the validated code.</p>
             @endif
         </x-form>
     @else
         <x-form>
-            <p class="text-center text-gray-300">Please, generate a code first.</p>
+            <p class="text-center ">Please, generate a code first.</p>
         </x-form>
     @endif
 

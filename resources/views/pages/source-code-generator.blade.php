@@ -105,8 +105,8 @@ new class extends \Livewire\Volt\Component {
         </x-form>
     @else
         <x-form>
-            <h2 class="text-center font-bold text-2xl text-gray-400 ">Source Code Generated.</h2>
-            <p class="text-center text-gray-300">Please, continue with the generation of the formal model or generate a
+            <h2 class="text-center font-bold text-2xl ">Source Code Generated.</h2>
+            <p class="text-center">Please, continue with the generation of the formal model or generate a
                 new code.</p>
             <div class="flex justify-center w-full">
                 <x-button

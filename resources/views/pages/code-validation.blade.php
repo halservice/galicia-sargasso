@@ -20,7 +20,6 @@ new class extends \Livewire\Volt\Component {
     #[Locked]
     public string $result;
 
-    #[Locked]
     public string $req;
 
     protected ?CodeGeneratorSettings $settings = null;
@@ -139,7 +138,7 @@ new class extends \Livewire\Volt\Component {
 
     @if(session('last_generated_code_id') && session('last_formal_model_id'))
         <x-form no-separator class="flex flex-col items-center justify-center">
-            <h2 class="text-center font-bold text-2xl text-gray-400">Would you like to validate the code?</h2>
+            <h2 class="text-center font-bold text-2xl">Would you like to validate the code?</h2>
             <div class="flex justify-center w-full">
                 <x-button
                     label="Validate the code"
@@ -150,7 +149,7 @@ new class extends \Livewire\Volt\Component {
         </x-form>
     @else
         <x-form>
-            <p class="text-center text-gray-300">Please, generate the code and the formal model first.</p>
+            <p class="text-center ">Please, generate the code and the formal model first.</p>
         </x-form>
     @endif
 

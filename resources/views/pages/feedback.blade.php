@@ -28,7 +28,7 @@ new class extends \Livewire\Volt\Component {
     public function boot(): void
     {
         if (session('feedback_validation_id')) {
-            $this->generatedValidation = session('feedback_validation_id');
+            $this->validationId = session('feedback_validation_id');
             $this->generatedValidation = app(GeneratedValidatedCode::class)->find($this->validationId);
 
             $this->generated_code = app(GeneratedCode::class)->find($this->generatedValidation->generated_code_id);
@@ -75,7 +75,7 @@ new class extends \Livewire\Volt\Component {
         <x-button label="Show Formal Model" wire:click="$toggle('showDrawer2')" />
     </div>
     @else
-        <p>You must progress with the process first.</p>
+        <p>You must complete the process first.</p>
     @endif
 
 

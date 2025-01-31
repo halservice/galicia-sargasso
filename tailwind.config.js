@@ -25,14 +25,14 @@ export default {
             fontFamily: {
                 sans: ['Figtree', ...defaultTheme.fontFamily.sans],
             },
-    //         // colors: {
-    //         //     primary: '#fab387',
+            colors: {
+                primary: '#3864fc',
     //         //     secondary: '#f9a36f',
     //         //     base: {
     //         //         '100': '#1a1d21',
     //         //         '200': '#212529',
     //         //     },
-    //         // },
+            },
     //
         },
     },
@@ -45,14 +45,14 @@ export default {
 		},
 		'.user-message':{marginLeft:'auto',
         marginBottom: '10px',
-		backgroundColor:'#fab387',
+		backgroundColor:'#ffffff',
 		color:'#1e1e2e',
         width:'fit-content',
         wordWrap:'break-word',
 		},
 		'.assistant-message':{marginRight:'auto',
         marginBottom: '10px',
-        backgroundColor:'#1a1d21',
+        backgroundColor:'#3864fc',
 		color:'#f3f3f9',
         width:'fit-content',
         wordWrap:'break-word',

@@ -26,16 +26,20 @@ class AppBrand extends Component
                     <!-- Hidden when collapsed -->
                     <div {{ $attributes->class(["hidden-when-collapsed"]) }}>
                         <div class="flex items-center gap-3 pt-2 ">
-                            <x-icon name="o-square-3-stack-3d" class="w-6 -mb-1 text-primary" />
-                            <span class="font-bold text-4xl me-3 text-primary">
-                                Galicia
-                            </span>
+                             <img
+                             src="{{ asset('images/GALICIA_LOGO.png') }}"
+                             alt="Galicia"
+                             class="inline-block max-w-full h-auto max-w-[200px] mt-3"
+                             >
                         </div>
                     </div>
 
                     <!-- Display when collapsed -->
                     <div class="display-when-collapsed hidden mx-5 mt-4 lg:mb-6 h-[28px]">
-                        <x-icon name="s-square-3-stack-3d" class="w-6 -mb-1 text-primary" />
+                        <img
+                        src="{{ asset('images/GALICIA_ICON.png') }}"
+                        class="inline-block max-w-full h-auto max-w-[45px] mt-3"
+                        >
                     </div>
                 </a>
             HTML;
