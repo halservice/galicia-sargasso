@@ -15,4 +15,9 @@ trait EnumTrait
             ];
         });
     }
+
+    public static function random(): self
+    {
+        return Arr::random(self::cases());
+    }
 }

@@ -1,61 +1,59 @@
 <?php
 
-use Illuminate\Support\Arr;
-use Illuminate\Support\Str;
-use App\Enums\ProgrammingLanguage;
-use App\Enums\ModelTool;
-use App\Enums\LLM;
-use App\Traits\ExtractCodeTrait;
-use App\Settings\CodeGeneratorSettings;
-use Livewire\Attributes\Validate;
-use Livewire\Attributes\Locked;
-use App\AI\LLama;
 use App\AI\ChatGPT;
-use App\GeneratedCode;
+use App\AI\LLama;
+use App\Enums\LLM;
+use App\Models\GeneratedCode;
+use App\Settings\CodeGeneratorSettings;
+use App\Traits\ExtractCodeTrait;
+use Livewire\Attributes\Locked;
+use Livewire\Attributes\Validate;
 
 new class extends \Livewire\Volt\Component {
     use ExtractCodeTrait;
 
     #[Validate('required|string')]
-    public string $text;
+    public string $text = 'print hello world';
 
     #[Locked]
-    public string $result;
+    public ?string $result = null;
 
-    public string $req;
+//    public string $req;
 
     protected ?CodeGeneratorSettings $settings = null;
 
-    public function mount(): void
-    {
-        if ($lastCodeId = session('last_generated_code_id')) {
-            $lastCode = GeneratedCode::find($lastCodeId);
-            if ($lastCode) {
-                $this->req = $lastCode->requirement;
-                $this->result = $lastCode->generated_code;
-            }
-        }
-    }
+    public ?GeneratedCode $code = null;
+
+//    public function mount(): void
+//    {
+//        if ($lastCodeId = session('last_generated_code_id')) {
+//            $lastCode = GeneratedCode::find($lastCodeId);
+//            if ($lastCode) {
+//                $this->req = $lastCode->requirement;
+//                $this->result = $lastCode->generated_code;
+//            }
+//        }
+//    }
 
     public function boot(): void
     {
         $this->settings = app(CodeGeneratorSettings::class);
     }
 
-    public function clearSession(): void
-    {
-        session()->forget('last_generated_code_id');
-        session()->forget('last_formal_model_id');
-        session()->forget('last_validation_id');
-    }
+//    public function clearSession(): void
+//    {
+//        session()->forget('last_generated_code_id');
+//        session()->forget('last_formal_model_id');
+//        session()->forget('last_validation_id');
+//    }
 
     public function send(): void
     {
-        session()->forget('last_formal_model_id');
-        session()->forget('last_validation_id');
+//        session()->forget('last_formal_model_id');
+//        session()->forget('last_validation_id');
 
-        $this->req = $this->text;
-        $this->text = "";
+//        $this->req = $this->text;
+//        $this->text = "";
 
 
         $coder = match ($this->settings->llm_code) {
@@ -63,76 +61,80 @@ new class extends \Livewire\Volt\Component {
             default => new ChatGPT()
         };
 
-        $system_message = "You are an expert programmer. Generate clean and secure code based on user requirements using the following programming language {$this->settings->programming_language}. You must provide only the code in appropriate code blocks, explanations aren't required. Format your response using markdown.";
-
-        $message = $coder->systemMessage($system_message, $this->req);
+        $systemMessage = "You are an expert programmer. Generate clean and secure code based on user requirements using the following programming language {$this->settings->programming_language}. You must provide only the code in appropriate code blocks, explanations aren't required. Format your response using markdown.";
+        $message = $coder->systemMessage($systemMessage, $this->text);
         $response = $coder->send($message);
 
         $code = $this->extractCodeFromResponse($response);
-        if ($code != $response) {
+
+        if ($code !== $response) {
             $this->result = $code;
-            $codeId = GeneratedCode::log(
-                system_message: $system_message,
-                requirement: $this->req,
+
+            $this->code = GeneratedCode::log(
+                systemMessage: $systemMessage,
+                requirement: $this->text,
                 generatedCode: $this->result,
             );
-            session(['last_generated_code_id' => $codeId]);
         } else {
             $this->result = "Error in generating the code.<br>Please try again.";
         }
-
     }
 
+    public function clear(): void
+    {
+        $this->reset('text', 'result');
+    }
 }
 ?>
 
 <x-card title="Source Code Generator"
         subtitle="Input functional requirements in natural language through a user-friendly interface.">
 
-    @if(!session('last_generated_code_id'))
-        <x-form wire:submit="send" no-separator>
-            <x-textarea
-                wire:model="text"
-                placeholder="Type your natural language input here..."
-                rows="4"
-                wire:keydown.enter="send"
-                inline
-            />
-            <x-slot:actions>
-                <x-button label="Send" class="btn-secondary" type="submit" wire:loading.attr="disabled"
-                          wire:keydown.ctrl.enter="send"/>
-            </x-slot:actions>
-        </x-form>
-    @else
-        <x-form>
-            <h2 class="text-center font-bold text-2xl ">Source Code Generated.</h2>
-            <p class="text-center">Please, continue with the generation of the formal model or generate a
-                new code.</p>
-            <div class="flex justify-center w-full">
-                <x-button
-                    label="Generate New Code"
-                    class="btn-secondary"
-                    wire:click="clearSession"
-                    wire:loading.attr="disabled"/>
-            </div>
-        </x-form>
-    @endif
+    {{--    @if(!session('last_generated_code_id'))--}}
+    <x-form wire:submit="send" no-separator>
+        <x-textarea
+            wire:model="text"
+            placeholder="Type your natural language input here..."
+            rows="4"
+            wire:keydown.enter="send"
+            inline
+        />
+        <x-slot:actions>
+            <x-button label="Send" class="btn-primary" type="submit" wire:loading.attr="disabled"
+                      wire:keydown.ctrl.enter="send"/>
+
+            <x-button label="Reset" class="btn-danger" wire:loading.attr="disabled"
+                      wire:click="clear"/>
+        </x-slot:actions>
+    </x-form>
+    {{--    @else--}}
+    {{--        <x-form>--}}
+    {{--            <h2 class="text-center font-bold text-2xl ">Source Code Generated.</h2>--}}
+    {{--            <p class="text-center">Please, continue with the generation of the formal model or generate a--}}
+    {{--                new code.</p>--}}
+    {{--            <div class="flex justify-center w-full">--}}
+    {{--                <x-button--}}
+    {{--                    label="Generate New Code"--}}
+    {{--                    class="btn-secondary"--}}
+    {{--                    wire:click="clearSession"--}}
+    {{--                    wire:loading.attr="disabled"/>--}}
+    {{--            </div>--}}
+    {{--        </x-form>--}}
+    {{--    @endif--}}
 
 
-    <div class="py-3 px-3 rounded">
-        @if(isset($req))
-            <div class="chat-message user-message">
-                {{ $req }}
-            </div>
-        @endif
-        @if(isset($result))
-            <div class="chat-message assistant-message">
+    @if(isset($result))
+        <div class="mt-2 py-3 px-3 rounded-md border w-full ">
+            <code>
                 <pre><code>{{ $result }}</code></pre>
-            </div>
-        @endif
-    </div>
+            </code>
+        </div>
 
-
+        <div class="mt-2">
+            <x-button label="Generate model" class="btn-primary"
+                      :link="route('formal-model-generator', $code?->id)"></x-button>
+        </div>
+    @endif
 
 </x-card>
 

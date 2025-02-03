@@ -6,7 +6,7 @@ Volt::route('/','home')->name('home');
 
 Volt::route('/source-code-generator', 'source-code-generator')->name('source-code-generator');
 
-Volt::route('/formal-model-generator', 'formal-model-generator')->name('formal-model-generator');
+Volt::route('/formal-model-generator/{codeId?}', 'formal-model-generator')->name('formal-model-generator');
 
 Volt::route('/code-validation', 'code-validation')->name('code-validation');
 

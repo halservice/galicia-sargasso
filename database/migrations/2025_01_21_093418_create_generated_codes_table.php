@@ -12,12 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('generated_codes', function (Blueprint $table) {
-            $table->id()->unique();
-            $table->text('code_system_message');
+            $table->id();
+            $table->unsignedBigInteger('generated_formal_model_id')->nullable();
+            $table->text('system_message');
             $table->text('requirement');
             $table->text('generated_code');
             $table->string('programming_language');
-            $table->string('code_llm_used');
+            $table->string('llm_used');
             $table->timestamps();
         });
     }

@@ -13,14 +13,13 @@ return new class extends Migration
     {
         Schema::create('generated_validated_codes', function (Blueprint $table) {
             $table->id()->unique();
-            $table->foreignId('generated_code_id')->constrained('generated_codes');
-            $table->foreignId('generated_formal_id')->constrained('generated_formal_models');
-            $table->text('validation_system_message');
+            $table->morphs('generator');
+            $table->text('system_message');
             $table->json('validation_process');
             $table->text('test_result');
-            $table->text('generated_validated_code');
+            $table->text('validated_code');
             $table->integer('iteration');
-            $table->string('validation_llm_used');
+            $table->string('llm_used');
             $table->timestamps();
         });
     }

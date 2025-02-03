@@ -1,18 +1,14 @@
 <?php
 
-use App\Traits\ExtractCodeTrait;
-use Illuminate\Support\Arr;
-use App\Enums\ProgrammingLanguage;
-use App\Enums\ModelTool;
-use App\Enums\LLM;
-use App\Settings\CodeGeneratorSettings;
-use Livewire\Attributes\Validate;
-use Livewire\Attributes\Locked;
-use App\AI\LLama;
 use App\AI\ChatGPT;
-use App\GeneratedValidatedCode;
-use App\GeneratedFormalModel;
-use App\GeneratedCode;
+use App\AI\LLama;
+use App\Enums\LLM;
+use App\Models\GeneratedCode;
+use App\Models\GeneratedFormalModel;
+use App\Models\GeneratedValidatedCode;
+use App\Settings\CodeGeneratorSettings;
+use App\Traits\ExtractCodeTrait;
+use Livewire\Attributes\Locked;
 
 new class extends \Livewire\Volt\Component {
     use ExtractCodeTrait;
@@ -95,11 +91,11 @@ new class extends \Livewire\Volt\Component {
                 ];
                 $message = [
                     [
-                    'role' => 'system',
-                    'content' => $system_message,
+                        'role' => 'system',
+                        'content' => $system_message,
                     ], [
-                    'role' => 'user',
-                    'content' => end($messages)['content'],
+                        'role' => 'user',
+                        'content' => end($messages)['content'],
                     ]
                 ];
 
@@ -107,7 +103,7 @@ new class extends \Livewire\Volt\Component {
 
         }
 
-        $this->result= $currentCode;
+        $this->result = $currentCode;
 
         $check_system_message = "Your job is to check if a few test, generated from a formal model, are resolved correctly in the code. I know it's not possible to execute them, but try to understand if they could pass or not.";
         $check_user_message = "Here is the code $currentCode and here are the test {$this->generated_formal->test_case}.";
@@ -117,9 +113,9 @@ new class extends \Livewire\Volt\Component {
         $validatedId = GeneratedValidatedCode::log(
             generated_code_id: $this->generated_code->id,
             generated_formal_id: $this->generated_formal->id,
-            test_result: $check_test,
+            testResult: $check_test,
             validationProcess: $messages,
-            system_message: $system_message,
+            systemMessage: $system_message,
             generatedValidatedCode: $currentCode,
         );
 

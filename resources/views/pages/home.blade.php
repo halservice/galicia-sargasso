@@ -8,7 +8,7 @@
         <img
             src="{{ asset('images/GALICIA_LOGO.png') }}"
             alt="Galicia"
-            class="inline-block max-w-full h-auto max-w-[700px]"
+            class="inline-block h-auto max-w-[700px]"
         >
     </h1>
 </div>
