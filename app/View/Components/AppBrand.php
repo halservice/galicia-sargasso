@@ -29,7 +29,7 @@ class AppBrand extends Component
                              <img
                              src="{{ asset('images/GALICIA_LOGO.png') }}"
                              alt="Galicia"
-                             class="inline-block h-auto max-w-[200px] mt-3"
+                             class="inline-block h-[50px] w-auto max-w-[200px] mt-3"
                              >
                         </div>
                     </div>
@@ -38,7 +38,8 @@ class AppBrand extends Component
                     <div class="display-when-collapsed hidden mx-5 mt-4 lg:mb-6 h-[28px]">
                         <img
                         src="{{ asset('images/GALICIA_ICON.png') }}"
-                        class="inline-block h-auto max-w-[50px] mt-3"
+                        alt="Galicia"
+                        class="inline-block h-[30px] w-auto max-w-[38px] mt-3"
                         >
                     </div>
                 </a>

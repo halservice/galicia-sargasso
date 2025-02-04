@@ -7,7 +7,7 @@ use App\Models\GeneratedCode;
 use App\Models\GeneratedFormalModel;
 use App\Settings\CodeGeneratorSettings;
 use App\Traits\ExtractCodeTrait;
-use Livewire\Attributes\{Locked, Computed, Url};
+use Livewire\Attributes\{Locked, Computed, Url, Validate};
 
 new class extends \Livewire\Volt\Component {
     use ExtractCodeTrait;
@@ -15,29 +15,27 @@ new class extends \Livewire\Volt\Component {
     #[Locked]
     public string $result;
 
-    public string $text;
+    #[Validate('required|string')]
+    public string $text = '';
 
     #[Url]
     public ?int $codeId = null;
 
     public ?GeneratedCode $generatedCode = null;
-
     protected ?CodeGeneratorSettings $settings = null;
 //    protected ?GeneratedCode $generated_code = null;
 
-//    public function mount(): void
-//    {
-//        $this->generatedCode = GeneratedCode::findOrFail($this->code);
-//        dd($this->generatedCode->toArray());
+    public function mount(): void
+    {
+        if ($lastFormalId = session('last_formal_model_id')) {
+            $lastFormal = GeneratedFormalModel::find($lastFormalId);
 
-//        if ($lastFormalId = session('last_formal_model_id')) {
-//            $lastFormal = GeneratedFormalModel::find($lastFormalId);
-//            if ($lastFormal) {
-//                $this->req = $lastFormal->requirement;
-//                $this->result = $lastFormal->generated_formal_model;
-//            }
-//        }
-//    }
+            if ($lastFormal) {
+//                $this->text = $lastFormal->requirement;
+                $this->result = $lastFormal->generated_formal_model;
+            }
+        }
+    }
 
     public function boot(): void
     {
@@ -46,7 +44,6 @@ new class extends \Livewire\Volt\Component {
 
         if ($this->isFromGeneratedCode) {
             $this->generatedCode = GeneratedCode::findOrFail($this->codeId);
-            $this->text = $this->generatedCode->requirement;
         }
 //        $this->generated_code = app(GeneratedCode::class)->find($this->generatedCodeId);
     }
@@ -60,57 +57,59 @@ new class extends \Livewire\Volt\Component {
     public function send(): void
     {
 
-        $formalModel = new GeneratedFormalModel();
+//        $formalModel = new GeneratedFormalModel();
+//
+//        $formalModel->forceFill([])
+//            //->save();
+//        $formalModel->generatedCode()->associate($this->generatedCode);
+//        $formalModel->push();
 
-        $formalModel->forceFill([])
-            //->save();
-        $formalModel->generatedCode()->associate($this->generatedCode);
-        $formalModel->push();
+        $coder = match ($this->settings->llm_formal) {
+            LLM::Llama->value => new LLama(),
+            default => new ChatGPT()
+        };
 
+        if ($this->isFromGeneratedCode) {
+            $system_message = "You are an expert in formal verification using {$this->settings->model_tool}. Generate a {$this->settings->model_tool} formal model based on the provided requirements by the user and a generated code. Include all necessary requirements to verify the system's properties. Always output the model in a code block with '{$this->settings->model_tool}' as the language specification. You must provide only the formal model, explanations aren't required.";
+            $user_message = "Generate a formal model in {$this->settings->model_tool} for the following requirements: {$this->generatedCode->requirement} of the following code:{$this->generatedCode->generated_code}";
 
-//        session()->forget('last_validation_id');
+        }else{
+            $system_message = "You are an expert in formal verification using {$this->settings->model_tool}. Generate a {$this->settings->model_tool} formal model based on the provided requirements by the user. Include all necessary requirements to verify the system's properties. Always output the model in a code block with '{$this->settings->model_tool}' as the language specification. You must provide only the formal model, explanations aren't required.";
+            $user_message = $this->text;
+        }
 
-//        $this->req = $this->generated_code->requirement;
-//
-//        $coder = match ($this->settings->llm_formal) {
-//            LLM::Llama->value => new LLama(),
-//            default => new ChatGPT()
-//        };
-//
-//        $system_message = "You are an expert in formal verification using {$this->settings->model_tool}. Generate a {$this->settings->model_tool} formal model based on the provided requirements by the user and a generated code. Include all necessary requirements to verify the system's properties. Always output the model in a code block with '{$this->settings->model_tool}' as the language specification. You must provide only the formal model, explanations aren't required.";
-//        $user_message = "Generate a formal model in {$this->settings->model_tool} for the following requirements: {$this->generated_code->requirement} of the following code:{$this->generated_code->generated_code}";
-//
-//        $message = $coder->systemMessage($system_message, $user_message);
-//        $response = $coder->send($message);
-//        $code = $this->extractCodeFromResponse($response);
-//
-//        if ($code != $response) {
-//            $this->result = $code;
-//
-//            $test_case_message = "Given the generated formal model, could you generate a few test cases that the code should execute if written correctly?";
-//            $message = [
-//                ...$message,
-//                [
-//                    'role' => 'assistant',
-//                    'content' => $this->result,
-//                ], [
-//                    'role' => 'user',
-//                    'content' => $test_case_message
-//                ]
-//            ];
-//            $response = $coder->send($message);
-//
-//            $formalId = GeneratedFormalModel::log(
-//                generatedCodeId: $this->generated_code->id,
-//                testCase: $response,
-//                systemMessage: $system_message,
-//                requirement: $this->generated_code->requirement,
-//                generatedFormalModel: $this->result,
-//            );
-//            session(['last_formal_model_id' => $formalId]);
-//        } else {
-//            $this->result = "Error in generating formal model.<br>Please try again or change the formal model.";
-//        }
+        $message = $coder->systemMessage($system_message, $user_message);
+        $response = $coder->send($message);
+
+        $code = $this->extractCodeFromResponse($response);
+
+        if ($code != $response) {
+            $this->result = $code;
+
+            $test_case_message = "Given the generated formal model, could you generate a few test cases that the code should execute if written correctly?";
+            $message = [
+                ...$message,
+                [
+                    'role' => 'assistant',
+                    'content' => $this->result,
+                ], [
+                    'role' => 'user',
+                    'content' => $test_case_message
+                ]
+            ];
+            $response = $coder->send($message);
+
+            $formal = GeneratedFormalModel::log(
+                generatedCodeId: $this->codeId ?? null,
+                testCase: $response,
+                systemMessage: $system_message,
+                requirement: $this->generatedCode->requirement,
+                generatedFormalModel: $this->result,
+            );
+            session(['last_formal_model_id' => $formal->id]);
+        } else {
+            $this->result = "Error in generating formal model.<br>Please try again or change the formal model.";
+        }
     }
 
 }
@@ -120,11 +119,9 @@ new class extends \Livewire\Volt\Component {
 <x-card title="Formal Model Generator"
         subtitle="Generate a formal model of the source code using formal verification tools like NuSMV or PyModel.">
 
-{{ $text }}
-{{--    @if(session('last_generated_code_id'))--}}
+    @if($this->isFromGeneratedCode())
         <x-form wire:submit="send" no-separator class="flex flex-col items-center justify-center">
-{{--            @if(!session('last_formal_model_id'))--}}
-                <h2 class="text-center font-bold text-2xl">Would you like to generate the formal
+            <h2 class="text-center font-bold text-2xl">Would you like to generate the formal
                     model?</h2>
                 <x-slot:actions>
                     <div class="flex justify-center w-full">
@@ -134,31 +131,47 @@ new class extends \Livewire\Volt\Component {
                                   wire:keydown.ctrl.enter="send"/>
                     </div>
                 </x-slot:actions>
-{{--            @else--}}
-{{--                <h2 class="text-center font-bold text-2xl ">Formal Model Generated.</h2>--}}
-{{--                <p class="text-center ">Please, continue with the generation of the validated code.</p>--}}
-{{--            @endif--}}
         </x-form>
-{{--    @else--}}
-{{--        <x-form>--}}
-{{--            <p class="text-center ">Please, generate a code first.</p>--}}
-{{--        </x-form>--}}
-{{--    @endif--}}
+    @else
+        <x-form wire:submit="send" no-separator>
+            <x-textarea
+                wire:model="text"
+                placeholder="Type your natural language input here..."
+                rows="4"
+                wire:keydown.enter="send"
+                inline
+                />
+            <x-slot:actions>
+                <x-button label="Send" class="btn-primary" type="submit" wire:loading.attr="disabled"
+                         wire:keydown.ctrl.enter="send"/>
+
+{{--                <x-button label="Reset" class="btn-danger" wire:loading.attr="disabled"--}}
+{{--                          wire:click="clear"/>--}}
+            </x-slot:actions>
+        </x-form>
+    @endif
 
 
-{{--    <div class="p-2 rounded">--}}
-{{--        @if(isset($req))--}}
-{{--            <div class="chat-message user-message">--}}
-{{--                {{ $req }}--}}
-{{--            </div>--}}
-{{--        @endif--}}
-{{--        @if(isset($result))--}}
-{{--            <div class="chat-message assistant-message">--}}
-{{--                <pre><code>{{ $result }}</code></pre>--}}
-{{--            </div>--}}
-{{--        @endif--}}
-{{--    </div>--}}
 
+    @if(isset($result))
+            <div class="mt-5 chat-message assistant-message">
+                <code>
+                    <pre>{{ $result }}</pre>
+                </code>
+            </div>
+
+            @if($this->isFromGeneratedCode())
+            <div class="mt-2 flex">
+                <x-button label="Validate the code" class="btn-primary ml-auto"
+                          :link="route('code-validation', $code?->id)"></x-button>
+            </div>
+            @else
+                <div class="mt-2 flex">
+                    <x-button label="Generate the code" class="btn-primary ml-auto"
+                              :link="route('source-code-generator', $code?->id)"></x-button>
+                </div>
+            @endif
+    @endif
 
 </x-card>
 

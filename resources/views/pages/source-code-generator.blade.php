@@ -13,48 +13,34 @@ new class extends \Livewire\Volt\Component {
     use ExtractCodeTrait;
 
     #[Validate('required|string')]
-    public string $text = 'print hello world';
+    public string $text = '';
 
     #[Locked]
     public ?string $result = null;
-
-//    public string $req;
 
     protected ?CodeGeneratorSettings $settings = null;
 
     public ?GeneratedCode $code = null;
 
-//    public function mount(): void
-//    {
-//        if ($lastCodeId = session('last_generated_code_id')) {
-//            $lastCode = GeneratedCode::find($lastCodeId);
-//            if ($lastCode) {
-//                $this->req = $lastCode->requirement;
-//                $this->result = $lastCode->generated_code;
-//            }
-//        }
-//    }
+    public function mount(): void
+    {
+        if ($lastCodeId = session('last_generated_code_id')) {
+            $lastCode = GeneratedCode::find($lastCodeId);
+            if ($lastCode) {
+                $this->text = $lastCode->requirement;
+                $this->result = $lastCode->generated_code;
+            }
+        }
+    }
 
     public function boot(): void
     {
         $this->settings = app(CodeGeneratorSettings::class);
     }
 
-//    public function clearSession(): void
-//    {
-//        session()->forget('last_generated_code_id');
-//        session()->forget('last_formal_model_id');
-//        session()->forget('last_validation_id');
-//    }
-
     public function send(): void
     {
-//        session()->forget('last_formal_model_id');
-//        session()->forget('last_validation_id');
-
-//        $this->req = $this->text;
-//        $this->text = "";
-
+        session()->forget('last_formal_model_id');
 
         $coder = match ($this->settings->llm_code) {
             LLM::Llama->value => new LLama(),
@@ -71,17 +57,23 @@ new class extends \Livewire\Volt\Component {
             $this->result = $code;
 
             $this->code = GeneratedCode::log(
+                generatedFormalId: $this->FormalId ?? null,
                 systemMessage: $systemMessage,
                 requirement: $this->text,
                 generatedCode: $this->result,
             );
+
+            session(['last_generated_code_id' => $this->code->id]);
         } else {
             $this->result = "Error in generating the code.<br>Please try again.";
         }
+
     }
 
     public function clear(): void
     {
+        session()->forget('last_formal_model_id');
+        session()->forget('last_generated_code_id');
         $this->reset('text', 'result');
     }
 }
@@ -124,14 +116,14 @@ new class extends \Livewire\Volt\Component {
 
 
     @if(isset($result))
-        <div class="mt-2 py-3 px-3 rounded-md border w-full ">
+        <div class="chat-message assistant-message">
             <code>
-                <pre><code>{{ $result }}</code></pre>
+                <pre>{{ $result }}</pre>
             </code>
         </div>
 
-        <div class="mt-2">
-            <x-button label="Generate model" class="btn-primary"
+        <div class="mt-2 flex">
+            <x-button label="Generate the formal model" class="btn-primary ml-auto"
                       :link="route('formal-model-generator', $code?->id)"></x-button>
         </div>
     @endif

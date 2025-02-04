@@ -46,7 +46,7 @@
                     <x-menu-separator />
                 @endif
 
-                <x-menu-item title="Source Code Generator" subtitle="Communicates with a backend LLM to generate source code" icon="o-code-bracket" link="/source-code-generator" />
+                <x-menu-item title="Source Code Generator" icon="o-code-bracket" link="/source-code-generator" />
                 <x-menu-item title="Formal Model Generator" subtitle="Generates a formal model of the source code" icon="o-document" link="/formal-model-generator" />
                 <x-menu-item title="Code Validation" subtitle="Automatically checks the generated code" icon="o-check-badge" link="/code-validation" />
                 <x-menu-item title="Feedback" subtitle="Provides detailed feedback of the generated code" icon="o-chart-bar-square" link="/feedback" />

@@ -22,7 +22,7 @@ class GeneratedFormalModel extends Model
         'code_llm_used' => LLM::class,
     ];
 
-    public static function log(int $generatedCodeId, string $testCase, string $systemMessage, string $requirement, string $generatedFormalModel): static
+    public static function log(?int $generatedCodeId, string $testCase, string $systemMessage, string $requirement, string $generatedFormalModel): static
     {
         $setting = app(CodeGeneratorSettings::class);
 
