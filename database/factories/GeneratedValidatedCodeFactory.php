@@ -28,7 +28,7 @@ class GeneratedValidatedCodeFactory extends Factory
         return [
             'generator_type' => Arr::random($morphs),
             'generator_id' => function (array $attrs) {
-                return $attrs['generator_type']::factory()->id;
+                return $attrs['generator_type']::factory()->create()->id;
             },
             'system_message' => fake()->sentence,
             'validation_process' => [

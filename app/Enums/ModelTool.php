@@ -10,4 +10,6 @@ enum ModelTool: string
 
     case NuSMV = 'NuSMV';
     case EventB = 'Event-B';
+    case Let_LLM_Decide = 'let-llm';
+
 }

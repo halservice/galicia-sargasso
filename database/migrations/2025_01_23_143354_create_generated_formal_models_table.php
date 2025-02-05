@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('model_tool');
             $table->string('llm_used');
             $table->text('test_case');
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
     }

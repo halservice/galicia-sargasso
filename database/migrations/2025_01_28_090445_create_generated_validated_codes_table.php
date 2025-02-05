@@ -20,6 +20,7 @@ return new class extends Migration
             $table->text('validated_code');
             $table->integer('iteration');
             $table->string('llm_used');
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
     }

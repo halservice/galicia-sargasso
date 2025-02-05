@@ -19,6 +19,7 @@ return new class extends Migration
             $table->text('generated_code');
             $table->string('programming_language');
             $table->string('llm_used');
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
     }

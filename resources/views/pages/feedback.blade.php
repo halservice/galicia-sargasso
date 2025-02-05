@@ -3,6 +3,7 @@
 use App\Models\GeneratedCode;
 use App\Models\GeneratedFormalModel;
 use App\Models\GeneratedValidatedCode;
+use Livewire\Attributes\Computed;
 
 new class extends \Livewire\Volt\Component {
 
@@ -21,19 +22,22 @@ new class extends \Livewire\Volt\Component {
 
     public function boot(): void
     {
-        if (session('feedback_validation_id')) {
-            $this->validationId = session('feedback_validation_id');
-            $this->generatedValidation = app(GeneratedValidatedCode::class)->find($this->validationId);
+        if ((GeneratedValidatedCode::latest('created_at')->first())?->is_active) {
+            $this->generatedValidation = GeneratedValidatedCode::latest('created_at')->first();
 
-            $this->generated_code = app(GeneratedCode::class)->find($this->generatedValidation->generated_code_id);
-            $this->req = $this->generated_code->requirement;
-            $this->first_code = $this->generated_code->generated_code;
+            if($this->isFromGeneratedCode){
+                $this->generatedFormal = GeneratedFormalModel::findOrFail($this->generatedValidation->generator_id);
+                $this->generatedCode = GeneratedCode::findOrFail($this->generatedFormal->generated_code_id);
+            }else{
+                $this->generatedCode = GeneratedCode::findOrFail($this->generatedValidation->generator_id);
+                $this->generatedFormal = GeneratedFormalModel::findOrFail($this->generatedCode->generated_formal_model_id);
+            }
 
-            $this->generated_formal = app(GeneratedFormalModel::class)->find($this->generatedValidation->generated_formal_id);
-            $this->formal_model = $this->generated_formal->generated_formal_model;
+            $this->req = $this->generatedCode->requirement;
+            $this->first_code = $this->generatedCode->generated_code;
 
-            $jsonString = $this->generatedValidation->validation_process ?? '[]';
-            $data = json_decode($jsonString, true);
+//            $jsonString = $this->generatedValidation->validation_process ?? '[]';
+//            $data = json_decode($this->generatedValidation->validation_process, true);
 
             $iterationCount = 0;
             $this->iterations = collect($data)
@@ -57,6 +61,16 @@ new class extends \Livewire\Volt\Component {
 
     }
 
+    #[Computed]
+    public function isFromGeneratedCode(): bool
+    {
+        if((GeneratedValidatedCode::latest('created_at')->first())?->generator_type === 'App\Models\GeneratedFormalModel'){
+            return true;
+        }else{
+            return false;
+        }
+    }
+
 
 }
 ?>
@@ -66,7 +80,7 @@ new class extends \Livewire\Volt\Component {
         subtitle="Provide detailed feedback on the correctness and compliance of the generated code." shadow separator>
 
     <x-form>
-        @if(session('feedback_validation_id'))
+        @if((GeneratedValidatedCode::latest('created_at')->first())?->is_active)
             <h1 class="text-primary text-2xl font-bold">Summarization:</h1>
             <p>The user request was the following:</p>
             <i><b>
@@ -106,10 +120,10 @@ new class extends \Livewire\Volt\Component {
                         <li>{{ $mod }}</li>
                     @endforeach
                 </ul>
-{{--                <div class="flex justify-left w-full gap-5">--}}
-{{--                    <x-button label="Show Validated Code"--}}
-{{--                              wire:click="set('selectedIndex', {{ $index }}); $wire.showDrawer3 = true"/>--}}
-{{--                </div>--}}
+                {{--                <div class="flex justify-left w-full gap-5">--}}
+                {{--                    <x-button label="Show Validated Code"--}}
+                {{--                              wire:click="set('selectedIndex', {{ $index }}); $wire.showDrawer3 = true"/>--}}
+                {{--                </div>--}}
             @endforeach
 
         @else

@@ -1,13 +1,13 @@
 <?php
 
-use App\AI\ChatGPT;
-use App\AI\LLama;
-use App\Enums\LLM;
+use App\Actions\ResetGeneratorsAction;
+use App\Actions\CodeValidationAction;
 use App\Models\GeneratedCode;
 use App\Models\GeneratedFormalModel;
 use App\Models\GeneratedValidatedCode;
 use App\Settings\CodeGeneratorSettings;
 use App\Traits\ExtractCodeTrait;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
 
 new class extends \Livewire\Volt\Component {
@@ -19,112 +19,69 @@ new class extends \Livewire\Volt\Component {
     public string $req;
 
     protected ?CodeGeneratorSettings $settings = null;
-    protected ?GeneratedCode $generated_code = null;
-    protected ?GeneratedFormalModel $generated_formal = null;
+
+    protected ?GeneratedCode $generatedCode = null;
+    protected ?GeneratedFormalModel $generatedFormal = null;
+    protected ?GeneratedValidatedCode $lastValidation = null;
 
     public function mount(): void
     {
-        if ($lastValidationId = session('last_validation_id')) {
-            $lastValidation = GeneratedValidatedCode::find($lastValidationId);
-            if ($lastValidation) {
-                $this->req = "Validating the code...";
-                $this->result = $lastValidation->generated_validated_code;
-            }
+        $this->lastValidation = GeneratedValidatedCode::latest()->first();
+
+        if ($this->lastValidation?->is_active === true) {
+            $this->result = $this->lastValidation->validated_code;
         }
     }
 
     public function boot(): void
     {
-        $this->generatedCodeId = session('last_generated_code_id');
-        $this->generated_code = app(GeneratedCode::class)->find($this->generatedCodeId);
-        $this->generatedFormalId = session('last_formal_model_id');
-        $this->generated_formal = app(GeneratedFormalModel::class)->find($this->generatedFormalId);
         $this->settings = app(CodeGeneratorSettings::class);
+
+//        devo aggiungere il controllo su is_active se lo voglio tenere, altrimeni non funziona
+//        $lastValidation = GeneratedValidatedCode::orderBy('created_at', 'desc')->first();
+//        if ($lastValidation?->created_at->lt(Carbon::now()->subMinutes(30))) {
+//            $this->resetAll();
+//        }
+
+        if (
+            $this->settings->startFromGeneratedCode() &&
+            ($formal = GeneratedFormalModel::latest()->first())?->is_active
+        ) {
+            $this->generatedFormal = $formal;
+            $this->generatedCode = $formal->generatedCode;
+        } else if (($code = GeneratedCode::latest()->first())?->is_active) {
+            $this->generatedCode = $code;
+            $this->generatedFormal = $code->formalModel;
+        }
     }
 
-    public function checkChanges(string $response): bool
+    #[Computed]
+    public function startFromGeneratedCode(): bool
     {
-        if (preg_match('/Number of changes made:\s*(\d+)/i', $response, $matches)) {
-            $number = (int)trim($matches[1]);
-            if ($number === 0)
-                return true;
-        }
-        return false;
+        return $this->settings->sequence === 'code-first';
     }
 
     public function send(): void
     {
-        session()->forget('feedback_validation_id');
-
-        $iterations = $this->settings->iteration;
-
-        $coder = match ($this->settings->llm_code) {
-            LLM::Llama->value => new LLama(),
-            default => new ChatGPT()
-        };
-
-        $system_message = "Your job is to validate a source code given the {$this->settings->model_tool} formal model, you must show a better code following the specification of the formal model. First you have to generate the new validated code after you should briefly summon the changes you have done in '### Changes Made:'. Lastly you must print '### Number of changes made:' and specify an integer that could be 0 if there are no changes.";
-        $user_message = "Validate this code {$this->generated_code->generated_code} following the formal model {$this->generated_formal->generated_formal_model}";
-
-        $currentCode = $this->generated_code->generated_code;
-        $message = $coder->systemMessage($system_message, $user_message);
-        $messages = $message;
-        $flag = false;
-
-        for ($i = 1; $i <= $iterations && $flag === false; $i++) {
-            $this->req = "Validating the code... Iteration: $i/$iterations";
-            $this->stream(to: 'req', content: $this->req);
-
-            $response = $coder->send($message);
-
-            $messages[] = [
-                'role' => 'assistant',
-                'content' => $response,
-            ];
-
-            $flag = $this->checkChanges($response);
-            if ($flag === false && $i + 1 <= $iterations) {
-                $currentCode = $this->extractCodeFromResponse($response);
-                $messages[] = [
-                    'role' => 'user',
-                    'content' => "Here is the updated code after iteration $i: $currentCode. Please, validate the code following the formal model {$this->generated_formal->generated_formal_model}."
-                ];
-                $message = [
-                    [
-                        'role' => 'system',
-                        'content' => $system_message,
-                    ], [
-                        'role' => 'user',
-                        'content' => end($messages)['content'],
-                    ]
-                ];
-
-            }
-
+        if ($this->lastValidation) {
+            $this->lastValidation->is_active = false;
+            $this->lastValidation->update();
         }
 
-        $this->result = $currentCode;
-
-        $check_system_message = "Your job is to check if a few test, generated from a formal model, are resolved correctly in the code. I know it's not possible to execute them, but try to understand if they could pass or not.";
-        $check_user_message = "Here is the code $currentCode and here are the test {$this->generated_formal->test_case}.";
-        $check_test = $coder->systemMessage($check_system_message, $check_user_message);
-        $check_test = $coder->send($check_test);
-
-        $validatedId = GeneratedValidatedCode::log(
-            generated_code_id: $this->generated_code->id,
-            generated_formal_id: $this->generated_formal->id,
-            testResult: $check_test,
-            validationProcess: $messages,
-            systemMessage: $system_message,
-            generatedValidatedCode: $currentCode,
+        $validated = app(CodeValidationAction::class)(
+            $this->generatedCode,
+            $this->generatedFormal
         );
 
-        session(['last_validation_id' => $validatedId]);
-        session(['feedback_validation_id' => $validatedId]);
-        session()->forget('last_formal_model_id');
-        session()->forget('last_generated_code_id');
+        $this->result = $validated->validated_code;
     }
 
+    public function clear(): void
+    {
+        app(ResetGeneratorsAction::class)()
+
+        $this->reset('result');
+    }
 }
 ?>
 
@@ -132,37 +89,48 @@ new class extends \Livewire\Volt\Component {
 <x-card title="Code Validation"
         subtitle="Automatically checks the generated code against the formal model and refines it based on the errors detected.">
 
-    @if(session('last_generated_code_id') && session('last_formal_model_id'))
+    @if($this->generatedCode?->is_active && $this->generatedFormal?->is_active && (GeneratedValidatedCode::latest('created_at')->first())?->is_active === false )
         <x-form no-separator class="flex flex-col items-center justify-center">
             <h2 class="text-center font-bold text-2xl">Would you like to validate the code?</h2>
-            <div class="flex justify-center w-full">
-                <x-button
-                    label="Validate the code"
-                    class="btn-secondary"
-                    wire:click="send"
-                    wire:loading.attr="disabled"/>
-            </div>
+            <x-slot:actions>
+                <div class="flex justify-center w-full">
+                    <x-button
+                        label="Validate the code"
+                        class="btn-secondary"
+                        wire:click="send"
+                        wire:loading.attr="disabled"/>
+                </div>
+            </x-slot:actions>
+        </x-form>
+    @elseif($this->generatedCode?->is_active && $this->generatedFormal?->is_active && (GeneratedValidatedCode::latest('created_at')->first())?->is_active === true )
+        <x-form no-separator class="flex flex-col items-center justify-center">
+            <h2 class="text-center font-bold text-2xl">Code validated.</h2>
+            <x-slot:actions>
+                <div class="flex justify-center w-full">
+                    <x-button label="Start Again" class="btn-danger" wire:loading.attr="disabled"
+                              wire:click="clear"/>
+                </div>
+            </x-slot:actions>
         </x-form>
     @else
         <x-form>
-            <p class="text-center ">Please, generate the code and the formal model first.</p>
+            <h2 class="text-center font-bold text-2xl">Please, generate the code and the formal model first.</h2>
         </x-form>
     @endif
 
 
-    <div class="p-2 rounded">
-        @if(isset($req))
-            <div class="chat-message user-message">
-                <p wire:stream="req">{{ $req }}</p>
-            </div>
-        @endif
-        @if(isset($result))
-            <div class="chat-message assistant-message">
-                <pre><code>{{ $result }} </code></pre>
-            </div>
-        @endif
-    </div>
-
+    {{--    @if(isset($req))--}}
+    {{--        <div class="chat-message user-message">--}}
+    {{--            <p wire:stream="req">{{ $req }}</p>--}}
+    {{--        </div>--}}
+    {{--    @endif--}}
+    @if(isset($result))
+        <div class="mt-5 chat-message assistant-message">
+            <code>
+                <pre>{{ $result }}</pre>
+            </code>
+        </div>
+    @endif
 
 </x-card>
 

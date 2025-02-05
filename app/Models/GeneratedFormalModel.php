@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\LLM;
 use App\Enums\ModelTool;
 use App\Settings\CodeGeneratorSettings;
+use App\Traits\HasActiveColumn;
 use App\Traits\HasValidatedCode;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -16,10 +17,12 @@ class GeneratedFormalModel extends Model
     use HasFactory;
 
     use HasValidatedCode;
+    use HasActiveColumn;
 
     protected $casts = [
         'programming_language' => ModelTool::class,
         'code_llm_used' => LLM::class,
+        'is_active' => 'boolean',
     ];
 
     public static function log(?int $generatedCodeId, string $testCase, string $systemMessage, string $requirement, string $generatedFormalModel): static
@@ -35,6 +38,7 @@ class GeneratedFormalModel extends Model
                 'model_tool' => $setting->model_tool,
                 'llm_used' => $setting->llm_formal,
                 'test_case' => $testCase,
+                'is_active' => true,
             ]);
 
         $formal->save();
