@@ -20,9 +20,9 @@ new class extends \Livewire\Volt\Component {
 
     protected ?CodeGeneratorSettings $settings = null;
 
-    protected ?GeneratedCode $generatedCode = null;
-    protected ?GeneratedFormalModel $generatedFormal = null;
-    protected ?GeneratedValidatedCode $lastValidation = null;
+    public ?GeneratedCode $generatedCode = null;
+    public ?GeneratedFormalModel $generatedFormal = null;
+    public ?GeneratedValidatedCode $lastValidation = null;
 
     public function mount(): void
     {
@@ -42,6 +42,7 @@ new class extends \Livewire\Volt\Component {
 //        if ($lastValidation?->created_at->lt(Carbon::now()->subMinutes(30))) {
 //            $this->resetAll();
 //        }
+
 
         if (
             $this->settings->startFromGeneratedCode() &&
@@ -68,6 +69,7 @@ new class extends \Livewire\Volt\Component {
         );
 
         $this->result = $validated->validated_code;
+
     }
 
     public function clear(): void
@@ -82,26 +84,26 @@ new class extends \Livewire\Volt\Component {
 <x-card title="Code Validation"
         subtitle="Automatically checks the generated code against the formal model and refines it based on the errors detected.">
 
-    @if($this->generatedCode?->is_active && $this->generatedFormal?->is_active && (GeneratedValidatedCode::latest()->first())?->is_active === false )
-        <x-form no-separator class="flex flex-col items-center justify-center">
-            <h2 class="text-center font-bold text-2xl">Would you like to validate the code?</h2>
-            <x-slot:actions>
-                <div class="flex justify-center w-full">
-                    <x-button
-                        label="Validate the code"
-                        class="btn-secondary"
-                        wire:click="send"
-                        wire:loading.attr="disabled"/>
-                </div>
-            </x-slot:actions>
-        </x-form>
-    @elseif($this->generatedCode?->is_active && $this->generatedFormal?->is_active && (GeneratedValidatedCode::latest()->first())?->is_active === true )
+    @if($this->generatedCode?->is_active && $this->generatedFormal?->is_active && $this->lastValidation?->is_active)
         <x-form no-separator class="flex flex-col items-center justify-center">
             <h2 class="text-center font-bold text-2xl">Code validated.</h2>
             <x-slot:actions>
                 <div class="flex justify-center w-full">
                     <x-button label="Start Again" class="btn-secondary" wire:loading.attr="disabled"
                               wire:click="clear"/>
+                </div>
+            </x-slot:actions>
+        </x-form>
+    @elseif($this->generatedCode?->is_active && $this->generatedFormal?->is_active)
+                <x-form no-separator class="flex flex-col items-center justify-center">
+            <h2 class="text-center font-bold text-2xl">Would you like to validate the code?</h2>
+            <x-slot:actions>
+                <div class="flex justify-center w-full">
+                    <x-button
+                            label="Validate the code"
+                            class="btn-secondary"
+                            wire:click="send"
+                            wire:loading.attr="disabled"/>
                 </div>
             </x-slot:actions>
         </x-form>
