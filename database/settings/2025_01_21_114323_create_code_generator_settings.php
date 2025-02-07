@@ -12,9 +12,9 @@ return new class extends SettingsMigration
     {
         $this->migrator->add('generator.programming_language', ProgrammingLanguage::PHP->value);
         $this->migrator->add('generator.model_tool', ModelTool::NuSMV->value);
-        $this->migrator->add('generator.llm_code', LLM::ChatGPT->value);
-        $this->migrator->add('generator.llm_formal', LLM::ChatGPT->value);
-        $this->migrator->add('generator.llm_validation', LLM::ChatGPT->value);
+        $this->migrator->add('generator.llm_code', LLM::ChatGPT_4o->value);
+        $this->migrator->add('generator.llm_formal', LLM::ChatGPT_4o->value);
+        $this->migrator->add('generator.llm_validation', LLM::ChatGPT_4o->value);
         $this->migrator->add('generator.iteration', 2);
         $this->migrator->add('generator.sequence', Sequence::Code_Formal_Validation->value);
 
