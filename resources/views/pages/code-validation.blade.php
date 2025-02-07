@@ -55,12 +55,6 @@ new class extends \Livewire\Volt\Component {
         }
     }
 
-    #[Computed]
-    public function startFromGeneratedCode(): bool
-    {
-        return $this->settings->sequence === 'code-first';
-    }
-
     public function send(): void
     {
         if ($this->lastValidation) {
@@ -78,8 +72,7 @@ new class extends \Livewire\Volt\Component {
 
     public function clear(): void
     {
-        app(ResetGeneratorsAction::class)()
-
+        app(ResetGeneratorsAction::class)();
         $this->reset('result');
     }
 }
@@ -89,7 +82,7 @@ new class extends \Livewire\Volt\Component {
 <x-card title="Code Validation"
         subtitle="Automatically checks the generated code against the formal model and refines it based on the errors detected.">
 
-    @if($this->generatedCode?->is_active && $this->generatedFormal?->is_active && (GeneratedValidatedCode::latest('created_at')->first())?->is_active === false )
+    @if($this->generatedCode?->is_active && $this->generatedFormal?->is_active && (GeneratedValidatedCode::latest()->first())?->is_active === false )
         <x-form no-separator class="flex flex-col items-center justify-center">
             <h2 class="text-center font-bold text-2xl">Would you like to validate the code?</h2>
             <x-slot:actions>
@@ -102,12 +95,12 @@ new class extends \Livewire\Volt\Component {
                 </div>
             </x-slot:actions>
         </x-form>
-    @elseif($this->generatedCode?->is_active && $this->generatedFormal?->is_active && (GeneratedValidatedCode::latest('created_at')->first())?->is_active === true )
+    @elseif($this->generatedCode?->is_active && $this->generatedFormal?->is_active && (GeneratedValidatedCode::latest()->first())?->is_active === true )
         <x-form no-separator class="flex flex-col items-center justify-center">
             <h2 class="text-center font-bold text-2xl">Code validated.</h2>
             <x-slot:actions>
                 <div class="flex justify-center w-full">
-                    <x-button label="Start Again" class="btn-danger" wire:loading.attr="disabled"
+                    <x-button label="Start Again" class="btn-secondary" wire:loading.attr="disabled"
                               wire:click="clear"/>
                 </div>
             </x-slot:actions>

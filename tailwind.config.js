@@ -11,8 +11,8 @@ export default {
 		 "./vendor/robsontenorio/mary/src/View/Components/**/*.php"
 	],
     daisyui: {
-        themes: ["cmyk","night"], // false: only light + dark | true: all themes | array: specific themes like this ["light", "dark", "cupcake"]
-        darkTheme: "night", // name of one of the included themes for dark mode
+        themes: ["cmyk","dark"], // false: only light + dark | true: all themes | array: specific themes like this ["light", "dark", "cupcake"]
+        darkTheme: "dark", // name of one of the included themes for dark mode
         base: true, // applies background color and foreground color for root element by default
         styled: true, // include daisyUI colors and design decisions for all components
         utils: true, // adds responsive and modifier utility classes
@@ -37,26 +37,26 @@ export default {
         },
     },
     plugins: [
-        function({addComponents}){addComponents({'.chat-message':{backgroundColor:'#f3f3f9',
+        function({addComponents}){addComponents({
+        '.chat-message':{backgroundColor:'#f3f3f9',
 		borderRadius:'10px',
 		padding:'15px',
         gap: '5px',
 		maxWidth:'65%',
-		},
+        width:'fit-content',
+        wordWrap:'break-word',
+        overflowWrap: 'break-word',
+        },
 		'.user-message':{marginLeft:'auto',
         marginBottom: '10px',
 		backgroundColor:'#ffffff',
 		color:'#1e1e2e',
-        width:'fit-content',
-        wordWrap:'break-word',
 		},
 		'.assistant-message':{marginRight:'auto',
         marginBottom: '10px',
         backgroundColor:'#3864fc',
 		color:'#f3f3f9',
-        width:'fit-content',
-        wordWrap:'break-word',
-		},
+        },
 		// // '.assistant-messagecode':{backgroundColor:'#ffffff',
 		// // color:'#ffffff',
 		// // borderRadius:'4px',

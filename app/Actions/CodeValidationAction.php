@@ -38,7 +38,7 @@ class CodeValidationAction
 
 //        ($this->resetGeneratorsAction)();
 
-        $systemMessage = "Your job is to validate a source code given the formal model, you must show a better code following the specification of the formal model. First you have to generate the new validated code after you should briefly summon the changes you have done in '### Changes Made:'. Lastly you must print '### Number of changes made:' and specify an integer that could be 0 if there are no changes.";
+        $systemMessage = "Your job is to validate a source code given the formal model. You must refine the code following the specification of the formal model. First of all you have to generate the new validated code '### Validated code:'. After you should briefly summon the changes you have done in '### Changes Made:'. Lastly you must print '### Number of changes made:' and specify an integer that could be 0 if there are no changes.";
         $userMessage = "Validate this code {$code->generated_code} following the formal model {$formalModel->generated_formal_model}";
 
         $currentCode = $code->generated_code;
@@ -47,7 +47,7 @@ class CodeValidationAction
 
         $flag = false;
         for ($i = 1; $i <= $iterations && $flag === false; $i++) {
-            $this->req = "Validating the code... Iteration: $i/$iterations";
+//            $this->req = "Validating the code... Iteration: $i/$iterations";
 //            $this->stream(to: 'req', content: $this->req);
 
             $response = $coder->send($message);
@@ -58,11 +58,12 @@ class CodeValidationAction
             ];
 
             $flag = $this->checkChanges($response);
+            $currentCode = $this->extractCodeFromResponse($response);
+
             if (!$flag && $i + 1 <= $iterations) {
-                $currentCode = $this->extractCodeFromResponse($response);
                 $messages[] = [
                     'role' => 'user',
-                    'content' => "Here is the updated code after iteration $i: $currentCode. Please, validate the code following the formal model {$formalModel->generated_formal_model}."
+                    'content' => "Here is the updated code after iteration $i: $currentCode. Please, validate the code again following the formal model {$formalModel->generated_formal_model}."
                 ];
                 $message = [
                     [
@@ -78,8 +79,8 @@ class CodeValidationAction
 
         }
 
-        $checkSystemMessage = "Your job is to check if a few test, generated from a formal model, are resolved correctly in the code. I know it's not possible to execute them, but try to understand if they could pass or not.";
-        $checkUserMessage = "Here is the code $currentCode and here are the test {$formalModel->test_case}.";
+        $checkSystemMessage = "Your task is to verify whether a set of test cases, generated from a formal model, are correctly handled in the code. While execution is not possible, analyze the logic to determine whether they are likely to pass or fail.";
+        $checkUserMessage = "Here is the code $currentCode and here are the tests {$formalModel->test_case}.";
         $checkTest = $coder->systemMessage($checkSystemMessage, $checkUserMessage);
         $checkTest = $coder->send($checkTest);
 

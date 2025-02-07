@@ -13,3 +13,5 @@ Volt::route('/code-validation/', 'code-validation')->name('code-validation');
 Volt::route('/feedback', 'feedback')->name('feedback');
 
 Volt::route('/settings', 'settings')->name('settings');
+
+Volt::route('/logs', 'logs')->name('logs');

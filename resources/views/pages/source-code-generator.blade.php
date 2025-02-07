@@ -83,10 +83,10 @@ new class extends \Livewire\Volt\Component {
 
         // due comandi di sistemi differenti a seconda del metodo che uso
         if (! $this->startFromCode) {
-            $systemMessage = "You are an expert programmer. Generate clean and secure code based on user requirements and a formal model using the following programming language {$this->settings->programming_language}. You must provide only the code in appropriate code blocks, explanations aren't required. Format your response using markdown.";
-            $this->text = "Generate a code in {$this->settings->programming_language} for the following requirements: {$this->generatedFormal->requirement} of the following code:{$this->generatedFormal->generated_formal_model}";
+            $systemMessage = "You are an expert programmer. Generate clean and secure code based on user requirements and a formal model, using the following programming language {$this->settings->programming_language}. You must provide only the code within appropriate code blocks, with no explanations. Format your response using markdown.";
+            $this->text = "Generate a code in {$this->settings->programming_language} for the following requirements: {$this->generatedFormal->requirement} of the following formal model:{$this->generatedFormal->generated_formal_model}";
         } else {
-            $systemMessage = "You are an expert programmer. Generate clean and secure code based on user requirements using the following programming language {$this->settings->programming_language}. You must provide only the code in appropriate code blocks, explanations aren't required. Format your response using markdown.";
+            $systemMessage = "You are an expert programmer. Generate clean and secure code based on user requirements, using the following programming language {$this->settings->programming_language}. You must provide only the code within appropriate code blocks, with no explanation. Format your response using markdown.";
         }
 
         $message = $coder->systemMessage($systemMessage, $this->text);
@@ -123,7 +123,7 @@ new class extends \Livewire\Volt\Component {
 
     @if(! $this->startFromCode)
         <x-form wire:submit="send" no-separator class="flex flex-col items-center justify-center">
-            @if($this->generatedFormal?->is_active === true)
+            @if($this->generatedFormal?->is_active)
                 <h2 class="text-center font-bold text-2xl">Would you like to generate the source code?</h2>
                 <x-slot:actions>
                     <div class="flex justify-center w-full">
@@ -151,7 +151,7 @@ new class extends \Livewire\Volt\Component {
                 <x-button label="Send" class="btn-primary" type="submit" wire:loading.attr="disabled"
                           wire:keydown.ctrl.enter="send"/>
 
-                <x-button label="Reset" class="btn-danger" wire:loading.attr="disabled"
+                <x-button label="Reset" class="btn-secondary" wire:loading.attr="disabled"
                           wire:click="clear"/>
             </x-slot:actions>
         </x-form>

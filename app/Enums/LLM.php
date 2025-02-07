@@ -8,6 +8,6 @@ enum LLM: string
 {
     use EnumTrait;
 
-    case ChatGPT = 'chat-gpt';
+    case ChatGPT_4o = 'chat-gpt';
     case Llama = 'llama';
 }

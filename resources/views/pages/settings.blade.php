@@ -62,6 +62,13 @@ new class extends \Livewire\Volt\Component {
 
     public function save(): void
     {
+        //imposto parametri definiti se sforo con i valori delle iterations
+        if($this->iteration<1){
+            $this->iteration=1;
+        }elseif ($this->iteration>5){
+            $this->iteration=5;
+        }
+
         $this->settings->programming_language = $this->language;
         $this->settings->model_tool = $this->model;
         $this->settings->llm_code = $this->llm_code;
@@ -83,7 +90,7 @@ new class extends \Livewire\Volt\Component {
     <x-form wire:submit="save" no-separator>
         <x-select
             class="w-80"
-            label="Select the sequence of the process:"
+            label="Select the sequence of the process"
             wire:model="sequence"
             placeholder="Select a sequence..."
             :options="$sequences"
@@ -133,9 +140,9 @@ new class extends \Livewire\Volt\Component {
 
         <x-input
             class="w-80"
-            label="Insert the number of iteration for the validation process"
+            label="Insert the number of iteration for the validation process (max 5)"
             wire:model="iteration"
-            placeholder="Write a number..."
+            placeholder="Write a number between 1 and 5..."
         />
 
         <x-select
