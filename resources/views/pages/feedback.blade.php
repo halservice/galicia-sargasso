@@ -13,6 +13,8 @@ new class extends \Livewire\Volt\Component {
     public bool $showDrawer = false;
     public string $activeContent = '';
     public ?int $selectedIterationIndex = null;
+    public int $iterationNumber = 0;
+
 
     protected ?CodeGeneratorSettings $settings = null;
 
@@ -60,6 +62,12 @@ new class extends \Livewire\Volt\Component {
 
     }
 
+    public function showIteration(int $index, string $content): void
+    {
+        $this->iterationNumber = $index;
+        $this->activeContent = $content;
+        $this->showDrawer = true;
+    }
 
 }
 ?>
@@ -75,14 +83,14 @@ new class extends \Livewire\Volt\Component {
             @elseif($activeContent === 'formal')
                 <pre><code>{{ $this->generatedFormal->generated_formal_model }}</code></pre>
             @elseif($activeContent === 'test')
-                <pre>{!! $this->generatedFormal->test_case !!}</pre>
+                <pre>{{ $this->generatedFormal->test_case }}</pre>
             @elseif($activeContent === 'testResult')
                 <pre>{{ $this->generatedValidation->test_result }}</pre>
             @elseif($activeContent === 'iteration')
-                dd({{ $this->iterations[$selectedIterationIndex]['validated_codes'] }});
-                <pre><code>{{ $this->iterations[$selectedIterationIndex]['validated_codes'] }}</code></pre>
+                <pre><code>{{ $this->iterations[$this->iterationNumber]['validated_codes'] }}</code></pre>
             @endif
         </div>
+        <br>
         <x-button label="Close" class="btn-primary" @click="$wire.showDrawer = false"/>
         <x-button label="Copy" class="btn-secondary" @click="copy()"/>
     </x-drawer>
@@ -110,14 +118,9 @@ new class extends \Livewire\Volt\Component {
                         {{ $mod }}<br>
                     @endforeach
                 </ul>
-                <x-textarea
-                    rows="5"
-                >
-                    {{ $iteration['validated_codes'] }}
-                </x-textarea>
                 <div class="flex justify-left w-full gap-5">
-                    <x-button label="Show Validated Code" class="btn-secondary" disabled
-                              wire:click="$set('activeContent', 'iteration'); $set('selectedIterationIndex', {{ $index }});  $set('showDrawer', true)"/>
+                    <x-button label="Show Validated Code" class="btn-secondary"
+                              wire:click="showIteration({{ $index }}, 'iteration')"/>
                 </div>
             @endforeach
 

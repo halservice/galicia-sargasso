@@ -83,10 +83,14 @@ new class extends \Livewire\Volt\Component {
 
         // due comandi di sistemi differenti a seconda del metodo che uso
         if (! $this->startFromCode) {
-            $systemMessage = "You are an expert programmer. Generate clean and secure code based on user requirements and a formal model, using the following programming language {$this->settings->programming_language}. You must provide only the code within appropriate code blocks, with no explanations. Format your response using markdown.";
+            $systemMessage = "You are an expert programmer. Generate clean and secure code based on user requirements and a formal model, using the following programming language {$this->settings->programming_language}. You should only write the requested code or function, don't write a main and test cases. You must provide the code within appropriate code blocks, with no explanations. Format your response using markdown.";
             $this->text = "Generate a code in {$this->settings->programming_language} for the following requirements: {$this->generatedFormal->requirement} of the following formal model:{$this->generatedFormal->generated_formal_model}";
         } else {
-            $systemMessage = "You are an expert programmer. Generate clean and secure code based on user requirements, using the following programming language {$this->settings->programming_language}. You must provide only the code within appropriate code blocks, with no explanation. Format your response using markdown.";
+            $systemMessage = "You are an expert programmer. Generate clean and secure code based on user requirements, using the following programming language {$this->settings->programming_language}. You should only write the requested code or function, don't write a main and test cases. You must provide only the code within appropriate code blocks, with no explanation. Format your response using markdown.";
+            if(trim($this->text) === ''){
+                $this->result="Error: the text field can't be empty.";
+                return;
+            }
         }
 
         $message = $coder->systemMessage($systemMessage, $this->text);
@@ -127,10 +131,16 @@ new class extends \Livewire\Volt\Component {
                 <h2 class="text-center font-bold text-2xl">Would you like to generate the source code?</h2>
                 <x-slot:actions>
                     <div class="flex justify-center w-full">
-                        <x-button label="Generate the code"
+                        <x-button
                                   class="btn-secondary"
                                   type="submit" wire:loading.attr="disabled"
-                                  wire:keydown.ctrl.enter="send"/>
+                                  wire:keydown.ctrl.enter="send">
+                        <span wire:loading.remove wire:target="send">Generate the code</span>
+                        <span wire:loading wire:target="send" class="flex items-center">
+                         <x-icon name="o-arrow-path" class="animate-spin mr-2" />
+                         Generating the code...
+                        </span>
+                        </x-button>
                     </div>
                 </x-slot:actions>
             @else
@@ -148,9 +158,14 @@ new class extends \Livewire\Volt\Component {
                 inline
             />
             <x-slot:actions>
-                <x-button label="Send" class="btn-primary" type="submit" wire:loading.attr="disabled"
-                          wire:keydown.ctrl.enter="send"/>
-
+                <x-button class="btn-primary" type="submit" wire:loading.attr="disabled"
+                          wire:keydown.ctrl.enter="send">
+                <span wire:loading.remove wire:target="send">Send</span>
+                <span wire:loading wire:target="send" class="flex items-center">
+                 <x-icon name="o-arrow-path" class="animate-spin mr-2" />
+                 Sending...
+                </span>
+                </x-button>
                 <x-button label="Reset" class="btn-secondary" wire:loading.attr="disabled"
                           wire:click="clear"/>
             </x-slot:actions>
@@ -158,7 +173,7 @@ new class extends \Livewire\Volt\Component {
     @endif
 
     @if(isset($result))
-        <div class="chat-message assistant-message mt-5">
+        <div class="rounded-[10px] p-[15px] gap-[5px] max-w-[65%] w-fit break-words mr-auto mb-5 bg-[#3864fc] text-white mt-5">
             <code>
                 <pre>{{ $result }}</pre>
             </code>

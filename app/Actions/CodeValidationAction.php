@@ -38,7 +38,7 @@ class CodeValidationAction
 
 //        ($this->resetGeneratorsAction)();
 
-        $systemMessage = "Your job is to validate a source code given the formal model. You must refine the code following the specification of the formal model. First of all you have to generate the new validated code '### Validated code:'. After you should briefly summon the changes you have done in '### Changes Made:'. Lastly you must print '### Number of changes made:' and specify an integer that could be 0 if there are no changes.";
+        $systemMessage = "Your job is to verify if the given source code complies with the given formal model and the initial request. You should only focus on the requested code or function, don't write a main or test cases. You must refine the code following the specification of the formal model. First of all you have to generate the new validated code '### Validated code:'. After you should briefly summon the changes you have done in '### Changes Made:'. Lastly you must print '### Number of changes made:' and specify an integer that could be 0 if there are no changes.";
         $userMessage = "Validate this code {$code->generated_code} following the formal model {$formalModel->generated_formal_model}";
 
         $currentCode = $code->generated_code;

@@ -88,10 +88,14 @@ new class extends \Livewire\Volt\Component {
 
         // due comandi di sistemi differenti a seconda del metodo che uso
         if ($this->startFromCode) {
-            $system_message = "You are an expert in formal verification using $formalTool. Generate a formal model based on the user-provided requirements and a generated code. Include all necessary requirements to verify the system's properties. Always output the model in a code block with the language specification. You must provide only the formal model, explanations aren't required. Format the answer in markdown.";
+            $system_message = "You are an expert in formal verification using $formalTool. Generate a formal model based on the user-provided requirements and a generated code. Do not include validation constraints that are not explicitly specified in the initial request. Always output the model in a code block with the language specification. You must provide only the formal model, explanations aren't required. Format the answer in markdown.";
             $this->text = "Generate a formal model in $formalTool for the following requirements: {$this->generatedCode->requirement} of the following code:{$this->generatedCode->generated_code}";
         } else {
-            $system_message = "You are an expert in formal verification using $formalTool. Generate a formal model based on the user-provided requirements. Include all necessary requirements to verify the system's properties. Always output the model in a code block with the language specification. You must provide only the formal model, explanations aren't required. Format the answer in markdown.";
+            $system_message = "You are an expert in formal verification using $formalTool. Generate a formal model based on the user-provided requirements. Do not include validation constraints that are not explicitly specified in the initial request. Always output the model in a code block with the language specification. You must provide only the formal model, explanations aren't required. Format the answer in markdown.";
+            if(trim($this->text) === ''){
+                $this->result="Error: the text field can't be empty.";
+                return;
+            }
         }
 
         $message = $coder->systemMessage($system_message, $this->text);
@@ -146,10 +150,16 @@ new class extends \Livewire\Volt\Component {
                 <h2 class="text-center font-bold text-2xl">Would you like to generate the formal model?</h2>
                 <x-slot:actions>
                     <div class="flex justify-center w-full">
-                        <x-button label="Generate Formal Model"
+                        <x-button
                                   class="btn-secondary"
                                   type="submit" wire:loading.attr="disabled"
-                                  wire:keydown.ctrl.enter="send"/>
+                                  wire:keydown.ctrl.enter="send">
+                        <span wire:loading.remove wire:target="send">Generate the formal model</span>
+                        <span wire:loading wire:target="send" class="flex items-center">
+                        <x-icon name="o-arrow-path" class="animate-spin mr-2" />
+                        Generating the formal model...
+                        </span>
+                        </x-button>
                     </div>
                 </x-slot:actions>
             @else
@@ -167,9 +177,14 @@ new class extends \Livewire\Volt\Component {
                 inline
             />
             <x-slot:actions>
-                <x-button label="Send" class="btn-primary" type="submit" wire:loading.attr="disabled"
-                          wire:keydown.ctrl.enter="send"/>
-
+                <x-button class="btn-primary" type="submit" wire:loading.attr="disabled"
+                          wire:keydown.ctrl.enter="send">
+                <span wire:loading.remove wire:target="send">Send</span>
+                <span wire:loading wire:target="send" class="flex items-center">
+                 <x-icon name="o-arrow-path" class="animate-spin mr-2" />
+                 Sending...
+                </span>
+                </x-button>
                 <x-button label="Reset" class="btn-secondary" wire:loading.attr="disabled"
                           wire:click="clear"/>
             </x-slot:actions>
@@ -178,7 +193,7 @@ new class extends \Livewire\Volt\Component {
 
 
     @if(isset($result))
-        <div class="mt-5 chat-message assistant-message">
+        <div class="rounded-[10px] p-[15px] gap-[5px] max-w-[65%] w-fit break-words mr-auto mb-5 bg-[#3864fc] text-white mt-5">
             <code>
                 <pre>{{ $result }}</pre>
             </code>

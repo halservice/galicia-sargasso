@@ -15,3 +15,6 @@ Volt::route('/feedback', 'feedback')->name('feedback');
 Volt::route('/settings', 'settings')->name('settings');
 
 Volt::route('/logs', 'logs')->name('logs');
+
+Volt::route('/login', 'auth.login')->name('login');
+

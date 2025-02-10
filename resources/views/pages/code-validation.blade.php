@@ -100,10 +100,15 @@ new class extends \Livewire\Volt\Component {
             <x-slot:actions>
                 <div class="flex justify-center w-full">
                     <x-button
-                            label="Validate the code"
                             class="btn-secondary"
                             wire:click="send"
-                            wire:loading.attr="disabled"/>
+                            wire:loading.attr="disabled">
+                    <span wire:loading.remove wire:target="send">Validate the code</span>
+                    <span wire:loading wire:target="send" class="flex items-center">
+                 <x-icon name="o-arrow-path" class="animate-spin h-4 w-4 mr-2" />
+                 Validating the code...
+                </span>
+                    </x-button>
                 </div>
             </x-slot:actions>
         </x-form>
@@ -120,7 +125,7 @@ new class extends \Livewire\Volt\Component {
     {{--        </div>--}}
     {{--    @endif--}}
     @if(isset($result))
-        <div class="mt-5 chat-message assistant-message">
+        <div class="rounded-[10px] p-[15px] gap-[5px] max-w-[65%] w-fit break-words mr-auto mb-5 bg-[#3864fc] text-white mt-5">
             <code>
                 <pre>{{ $result }}</pre>
             </code>
