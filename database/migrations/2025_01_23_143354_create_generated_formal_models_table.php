@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('generated_formal_models', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('generated_code_id')->nullable();
+            $table->unsignedBigInteger('user_id');
             $table->text('system_message');
             $table->text('requirement');
             $table->text('generated_formal_model');

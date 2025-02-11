@@ -26,11 +26,15 @@ new class extends \Livewire\Volt\Component {
 
     public function mount(): void
     {
-        $this->lastValidation = GeneratedValidatedCode::latest()->first();
+        $this->lastValidation = GeneratedValidatedCode::where('user_id', auth()->id())
+                            ->latest()
+                            ->first();
 
         if ($this->lastValidation?->is_active === true) {
             $this->result = $this->lastValidation->validated_code;
         }
+
+
     }
 
     public function boot(): void
@@ -44,13 +48,15 @@ new class extends \Livewire\Volt\Component {
 //        }
 
 
-        if (
-            $this->settings->startFromGeneratedCode() &&
-            ($formal = GeneratedFormalModel::latest()->first())?->is_active
-        ) {
+        if ($this->settings->startFromGeneratedCode() &&
+            ($formal = GeneratedFormalModel::where('user_id', auth()->id())
+                ->latest()
+                ->first())?->is_active) {
             $this->generatedFormal = $formal;
             $this->generatedCode = $formal->generatedCode;
-        } else if (($code = GeneratedCode::latest()->first())?->is_active) {
+        } else if (($code = GeneratedCode::where('user_id', auth()->id())
+            ->latest()
+            ->first())?->is_active) {
             $this->generatedCode = $code;
             $this->generatedFormal = $code->formalModel;
         }
@@ -70,12 +76,15 @@ new class extends \Livewire\Volt\Component {
 
         $this->result = $validated->validated_code;
 
+        redirect()->route('code-validation');
+
     }
 
     public function clear(): void
     {
         app(ResetGeneratorsAction::class)();
         $this->reset('result');
+        redirect()->route('code-validation');
     }
 }
 ?>
@@ -125,7 +134,7 @@ new class extends \Livewire\Volt\Component {
     {{--        </div>--}}
     {{--    @endif--}}
     @if(isset($result))
-        <div class="rounded-[10px] p-[15px] gap-[5px] max-w-[65%] w-fit break-words mr-auto mb-5 bg-[#3864fc] text-white mt-5">
+        <div class="rounded-[10px] p-[15px] gap-[5px] w-fit break-words mr-auto mb-5 bg-[#3864fc] text-white mt-5">
             <code>
                 <pre>{{ $result }}</pre>
             </code>

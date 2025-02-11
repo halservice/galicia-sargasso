@@ -27,7 +27,9 @@ new class extends \Livewire\Volt\Component {
     {
         $this->settings = app(CodeGeneratorSettings::class);
 
-        $this->generatedValidation = (GeneratedValidatedCode::latest()->first());
+        $this->generatedValidation = (GeneratedValidatedCode::where('user_id', auth()->id())
+            ->latest()
+            ->first());
         if ($this->generatedValidation?->is_active) {
 
             if ($this->settings->startFromGeneratedCode()) {
@@ -83,16 +85,16 @@ new class extends \Livewire\Volt\Component {
             @elseif($activeContent === 'formal')
                 <pre><code>{{ $this->generatedFormal->generated_formal_model }}</code></pre>
             @elseif($activeContent === 'test')
-                <pre>{{ $this->generatedFormal->test_case }}</pre>
+                {!! Str::markdown($this->generatedFormal->test_case) !!}
             @elseif($activeContent === 'testResult')
-                <pre>{{ $this->generatedValidation->test_result }}</pre>
+                {!! Str::markdown($this->generatedValidation->test_result) !!}
             @elseif($activeContent === 'iteration')
                 <pre><code>{{ $this->iterations[$this->iterationNumber]['validated_codes'] }}</code></pre>
             @endif
         </div>
         <br>
         <x-button label="Close" class="btn-primary" @click="$wire.showDrawer = false"/>
-        <x-button label="Copy" class="btn-secondary" @click="copy()"/>
+        <x-button label="Copy" class="btn-secondary" @click="copy()" disabled/>
     </x-drawer>
 
     <x-form>
@@ -138,3 +140,6 @@ new class extends \Livewire\Volt\Component {
     </x-form>
 
 </x-card>
+
+
+

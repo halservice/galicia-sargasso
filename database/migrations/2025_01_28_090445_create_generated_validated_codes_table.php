@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('generated_validated_codes', function (Blueprint $table) {
             $table->id()->unique();
             $table->morphs('generator');
+            $table->unsignedBigInteger('user_id');
             $table->text('system_message');
             $table->json('validation_process');
             $table->text('test_result');

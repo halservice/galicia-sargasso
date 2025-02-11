@@ -8,6 +8,8 @@ return new class extends Migration
 {
     public function up()
     {
+        $userId = auth()->id();
+
         Schema::create('settings', function (Blueprint $table): void {
             $table->id();
 

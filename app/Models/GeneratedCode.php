@@ -32,6 +32,7 @@ class GeneratedCode extends Model
         return tap((new static())
             ->forceFill([
                 'generated_formal_model_id' => $generatedFormalId,
+                'user_id' => auth()->id(),
                 'system_message' => $systemMessage,
                 'requirement' => $requirement,
                 'generated_code' => $generatedCode,
@@ -50,4 +51,8 @@ class GeneratedCode extends Model
     {
         return $this->belongsTo(GeneratedFormalModel::class, 'generated_formal_model_id');
     }
-}
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }}

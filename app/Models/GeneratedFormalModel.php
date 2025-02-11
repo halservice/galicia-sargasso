@@ -32,6 +32,7 @@ class GeneratedFormalModel extends Model
         $formal = (new static())
             ->forceFill([
                 'generated_code_id' => $generatedCodeId,
+                'user_id' => auth()->id(),
                 'system_message' => $systemMessage,
                 'requirement' => $requirement,
                 'generated_formal_model' => $generatedFormalModel,
@@ -52,5 +53,10 @@ class GeneratedFormalModel extends Model
     public function generatedCode(): BelongsTo
     {
         return $this->belongsTo(GeneratedCode::class);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 }

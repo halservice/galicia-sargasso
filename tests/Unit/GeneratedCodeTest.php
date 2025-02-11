@@ -24,3 +24,10 @@ test('it has validated code', function () {
     expect($gc->validated)->toBeInstanceOf(\App\Models\GeneratedValidatedCode::class);
 });
 
+test('it belongs to user', function () {
+    $gc = \App\Models\GeneratedCode::factory()
+        ->for(\App\Models\User::factory(), 'user')
+        ->create();
+
+    expect($gc->user)->toBeInstanceOf(\App\Models\User::class);
+});

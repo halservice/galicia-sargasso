@@ -24,6 +24,8 @@
 
 {{-- MAIN --}}
 <x-main full-width>
+    @if($user = auth()->user())
+
     {{-- SIDEBAR --}}
     <x-slot:sidebar drawer="main-drawer" collapsible class="bg-base-100">
 
@@ -34,17 +36,17 @@
         <x-menu activate-by-route>
 
             {{-- User --}}
-            @if($user = auth()->user())
                 <x-menu-separator />
 
+{{--                <x-list-item :item="$user" value="name" sub-value="email" no-separator no-hover class="-mx-2 !-my-2 rounded">--}}
                 <x-list-item :item="$user" value="name" sub-value="email" no-separator no-hover class="-mx-2 !-my-2 rounded">
                     <x-slot:actions>
                         <x-button icon="o-power" class="btn-circle btn-ghost btn-xs" tooltip-left="logoff" no-wire-navigate link="/logout" />
                     </x-slot:actions>
+
                 </x-list-item>
 
                 <x-menu-separator />
-            @endif
 
             <x-menu-item title="Source Code Generator" icon="o-code-bracket" link="/source-code-generator" />
             <x-menu-item title="Formal Model Generator" subtitle="Generates a formal model of the source code" icon="o-document" link="/formal-model-generator" />
@@ -55,6 +57,7 @@
 
         </x-menu>
     </x-slot:sidebar>
+    @endif
 
     {{-- The `$slot` goes here --}}
     <x-slot:content>

@@ -7,6 +7,7 @@ use App\Settings\CodeGeneratorSettings;
 use App\Traits\HasActiveColumn;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class GeneratedValidatedCode extends Model
@@ -29,6 +30,7 @@ class GeneratedValidatedCode extends Model
         return tap((new static())
             ->forceFill([
                 'system_message' => $systemMessage,
+                'user_id' => auth()->id(),
                 'validation_process' => $validationProcess,
                 'validated_code' => $generatedValidatedCode,
                 'iteration' => $setting->iteration,
@@ -45,6 +47,11 @@ class GeneratedValidatedCode extends Model
     public function generator(): MorphTo
     {
         return $this->morphTo();
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 
 }

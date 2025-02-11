@@ -33,7 +33,9 @@ new class extends \Livewire\Volt\Component {
 
     public function mount(): void
     {
-        $this->lastFormal = GeneratedFormalModel::latest()->first();
+        $this->lastFormal = GeneratedFormalModel::where('user_id', auth()->id())
+                            ->latest()
+                            ->first();
 
         if ($this->lastFormal?->is_active) {
             $this->text = $this->lastFormal->requirement;
@@ -53,7 +55,10 @@ new class extends \Livewire\Volt\Component {
 //        }
 
         // Se parto dal codice ho bisogno di recuperare info del codice, controllando che questo esista e sia attivo
-        if ($this->startFromCode && ($code = GeneratedCode::latest()->first())?->is_active) {
+        $code = GeneratedCode::where('user_id', auth()->id())
+            ->latest()
+            ->first();
+        if ($this->startFromCode && $code?->is_active) {
             $this->generatedCode = $code;
         }
     }
@@ -68,7 +73,9 @@ new class extends \Livewire\Volt\Component {
                 $this->lastFormal->is_active = false;
                 $this->lastFormal->update();
             }
-            $lastValidation = GeneratedValidatedCode::latest()->first();
+            $lastValidation = GeneratedValidatedCode::where('user_id', auth()->id())
+                            ->latest()
+                            ->first();
             if ($lastValidation) {
                 $lastValidation->is_active = false;
                 $lastValidation->update();
@@ -193,7 +200,7 @@ new class extends \Livewire\Volt\Component {
 
 
     @if(isset($result))
-        <div class="rounded-[10px] p-[15px] gap-[5px] max-w-[65%] w-fit break-words mr-auto mb-5 bg-[#3864fc] text-white mt-5">
+        <div class="rounded-[10px] p-[15px] gap-[5px] w-fit break-words mr-auto mb-5 bg-[#3864fc] text-white mt-5">
             <code>
                 <pre>{{ $result }}</pre>
             </code>
