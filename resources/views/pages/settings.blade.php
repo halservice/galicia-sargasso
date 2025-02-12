@@ -1,6 +1,8 @@
 <?php
 
 use App\Actions\ResetGeneratorsAction;
+use App\Models\User;
+use App\Models\UserSetting;
 use Illuminate\Support\Arr;
 use App\Enums\ProgrammingLanguage;
 use App\Enums\LLM;
@@ -32,11 +34,14 @@ new class extends \Livewire\Volt\Component {
     #[Validate('required|string')]
     public string $sequence;
 
-    protected ?CodeGeneratorSettings $settings = null;
+    protected ?User $user = null;
+    protected ?UserSetting $settings = null;
+//    protected ?CodeGeneratorSettings $settings = null;
 
     public function boot(): void
     {
-        $this->settings = app(CodeGeneratorSettings::class);
+        $this->settings = UserSetting::where('user_id',auth()->id())->first();
+//        $this->settings = app(CodeGeneratorSettings::class);
     }
 
     public function mount(): void
@@ -48,6 +53,13 @@ new class extends \Livewire\Volt\Component {
         $this->llm_validation = $this->settings->llm_validation;
         $this->iteration = $this->settings->iteration;
         $this->sequence = $this->settings->sequence;
+//        $this->language = $this->settings->programming_language;
+//        $this->model = $this->settings->model_tool;
+//        $this->llm_code = $this->settings->llm_code;
+//        $this->llm_formal = $this->settings->llm_formal;
+//        $this->llm_validation = $this->settings->llm_validation;
+//        $this->iteration = $this->settings->iteration;
+//        $this->sequence = $this->settings->sequence;
     }
 
     public function with(): array
@@ -63,10 +75,10 @@ new class extends \Livewire\Volt\Component {
     public function save(): void
     {
         //imposto parametri definiti se sforo con i valori delle iterations
-        if($this->iteration<1){
-            $this->iteration=1;
-        }elseif ($this->iteration>5){
-            $this->iteration=5;
+        if ($this->iteration < 1) {
+            $this->iteration = 1;
+        } elseif ($this->iteration > 5) {
+            $this->iteration = 5;
         }
 
         $this->settings->programming_language = $this->language;

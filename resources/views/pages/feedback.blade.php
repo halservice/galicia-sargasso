@@ -3,7 +3,9 @@
 use App\Models\GeneratedCode;
 use App\Models\GeneratedFormalModel;
 use App\Models\GeneratedValidatedCode;
-use App\Settings\CodeGeneratorSettings;
+
+//use App\Settings\CodeGeneratorSettings;
+use App\Models\UserSetting;
 use Livewire\Attributes\Computed;
 
 new class extends \Livewire\Volt\Component {
@@ -16,7 +18,8 @@ new class extends \Livewire\Volt\Component {
     public int $iterationNumber = 0;
 
 
-    protected ?CodeGeneratorSettings $settings = null;
+//    protected ?CodeGeneratorSettings $settings = null;
+    protected ?UserSetting $settings = null;
 
     public string $req = '';
     public ?GeneratedCode $generatedCode = null;
@@ -25,7 +28,8 @@ new class extends \Livewire\Volt\Component {
 
     public function boot(): void
     {
-        $this->settings = app(CodeGeneratorSettings::class);
+        $this->settings = UserSetting::where('user_id', auth()->id())->first();
+//        $this->settings = app(CodeGeneratorSettings::class);
 
         $this->generatedValidation = (GeneratedValidatedCode::where('user_id', auth()->id())
             ->latest()
@@ -106,8 +110,10 @@ new class extends \Livewire\Volt\Component {
                 </b></i>
 
             <div class="flex justify-left w-full gap-5">
-                <x-button label="Show First Generated Code" class="btn-primary" wire:click="$set('activeContent', 'firstCode'); $wire.showDrawer = true"/>
-                <x-button label="Show Formal Model" class="btn-primary" wire:click="$set('activeContent', 'formal'); $wire.showDrawer = true"/>
+                <x-button label="Show First Generated Code" class="btn-primary"
+                          wire:click="$set('activeContent', 'firstCode'); $wire.showDrawer = true"/>
+                <x-button label="Show Formal Model" class="btn-primary"
+                          wire:click="$set('activeContent', 'formal'); $wire.showDrawer = true"/>
             </div>
 
             <h2 class="font-bold text-primary text-xl mt-4">Validation Process:</h2>
@@ -129,8 +135,10 @@ new class extends \Livewire\Volt\Component {
             <h2 class="font-bold text-primary text-xl mt-4">Test:</h2>
             <p>The platform produces a few test cases, here you can find more about it.</p>
             <div class="flex justify-left w-full gap-5">
-                <x-button label="Show Generated Test Cases" class="btn-primary" wire:click="$set('activeContent', 'test'); $wire.showDrawer = true"/>
-                <x-button label="Show If The Test Cases Passed" class="btn-primary" wire:click="$set('activeContent', 'testResult'); $wire.showDrawer = true"/>
+                <x-button label="Show Generated Test Cases" class="btn-primary"
+                          wire:click="$set('activeContent', 'test'); $wire.showDrawer = true"/>
+                <x-button label="Show If The Test Cases Passed" class="btn-primary"
+                          wire:click="$set('activeContent', 'testResult'); $wire.showDrawer = true"/>
             </div>
         @else
             <p>You must complete the process first.</p>

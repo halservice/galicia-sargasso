@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\UserSetting;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -27,7 +28,6 @@ new class extends \Livewire\Volt\Component {
 
         if (Auth::attempt($credentials, true)) {
             $request->session()->regenerate();
-
             $this->redirectIntended(default: route('home', absolute: false), navigate: true);
         }
 

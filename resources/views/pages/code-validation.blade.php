@@ -5,7 +5,9 @@ use App\Actions\CodeValidationAction;
 use App\Models\GeneratedCode;
 use App\Models\GeneratedFormalModel;
 use App\Models\GeneratedValidatedCode;
-use App\Settings\CodeGeneratorSettings;
+
+//use App\Settings\CodeGeneratorSettings;
+use App\Models\UserSetting;
 use App\Traits\ExtractCodeTrait;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
@@ -18,8 +20,9 @@ new class extends \Livewire\Volt\Component {
 
     public string $req;
 
-    protected ?CodeGeneratorSettings $settings = null;
+//    protected ?CodeGeneratorSettings $settings = null;
 
+    protected ?UserSetting $settings = null;
     public ?GeneratedCode $generatedCode = null;
     public ?GeneratedFormalModel $generatedFormal = null;
     public ?GeneratedValidatedCode $lastValidation = null;
@@ -27,8 +30,8 @@ new class extends \Livewire\Volt\Component {
     public function mount(): void
     {
         $this->lastValidation = GeneratedValidatedCode::where('user_id', auth()->id())
-                            ->latest()
-                            ->first();
+            ->latest()
+            ->first();
 
         if ($this->lastValidation?->is_active === true) {
             $this->result = $this->lastValidation->validated_code;
@@ -39,7 +42,8 @@ new class extends \Livewire\Volt\Component {
 
     public function boot(): void
     {
-        $this->settings = app(CodeGeneratorSettings::class);
+//        $this->settings = app(CodeGeneratorSettings::class);
+        $this->settings = UserSetting::where('user_id', auth()->id())->first();
 
 //        devo aggiungere il controllo su is_active se lo voglio tenere, altrimeni non funziona
 //        $lastValidation = GeneratedValidatedCode::orderBy('created_at', 'desc')->first();
@@ -104,17 +108,17 @@ new class extends \Livewire\Volt\Component {
             </x-slot:actions>
         </x-form>
     @elseif($this->generatedCode?->is_active && $this->generatedFormal?->is_active)
-                <x-form no-separator class="flex flex-col items-center justify-center">
+        <x-form no-separator class="flex flex-col items-center justify-center">
             <h2 class="text-center font-bold text-2xl">Would you like to validate the code?</h2>
             <x-slot:actions>
                 <div class="flex justify-center w-full">
                     <x-button
-                            class="btn-secondary"
-                            wire:click="send"
-                            wire:loading.attr="disabled">
-                    <span wire:loading.remove wire:target="send">Validate the code</span>
-                    <span wire:loading wire:target="send" class="flex items-center">
-                 <x-icon name="o-arrow-path" class="animate-spin h-4 w-4 mr-2" />
+                        class="btn-secondary"
+                        wire:click="send"
+                        wire:loading.attr="disabled">
+                        <span wire:loading.remove wire:target="send">Validate the code</span>
+                        <span wire:loading wire:target="send" class="flex items-center">
+                 <x-icon name="o-arrow-path" class="animate-spin h-4 w-4 mr-2"/>
                  Validating the code...
                 </span>
                     </x-button>

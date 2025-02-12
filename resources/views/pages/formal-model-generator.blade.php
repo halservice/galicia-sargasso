@@ -7,7 +7,9 @@ use App\Enums\LLM;
 use App\Models\GeneratedCode;
 use App\Models\GeneratedFormalModel;
 use App\Models\GeneratedValidatedCode;
-use App\Settings\CodeGeneratorSettings;
+
+//use App\Settings\CodeGeneratorSettings;
+use App\Models\UserSetting;
 use App\Traits\ExtractCodeTrait;
 use Carbon\Carbon;
 use Livewire\Attributes\{Locked, Computed, Url, Validate};
@@ -26,16 +28,18 @@ new class extends \Livewire\Volt\Component {
 
     public ?GeneratedFormalModel $lastFormal = null;
     public ?GeneratedCode $generatedCode = null;
-    protected ?CodeGeneratorSettings $settings = null;
+    protected ?UserSetting $settings = null;
+//    protected ?CodeGeneratorSettings $settings = null;
 
     public bool $startFromCode = true;
+
 //    protected ?GeneratedCode $generated_code = null;
 
     public function mount(): void
     {
         $this->lastFormal = GeneratedFormalModel::where('user_id', auth()->id())
-                            ->latest()
-                            ->first();
+            ->latest()
+            ->first();
 
         if ($this->lastFormal?->is_active) {
             $this->text = $this->lastFormal->requirement;
@@ -45,7 +49,8 @@ new class extends \Livewire\Volt\Component {
 
     public function boot(): void
     {
-        $this->settings = app(CodeGeneratorSettings::class);
+//        $this->settings = app(CodeGeneratorSettings::class);
+        $this->settings = UserSetting::where('user_id',auth()->id())->first();
         $this->startFromCode = $this->settings->startFromGeneratedCode();
 
 //        devo aggiungere il controllo su is_active se lo voglio tenere, altrimeni non funziona
@@ -74,8 +79,8 @@ new class extends \Livewire\Volt\Component {
                 $this->lastFormal->update();
             }
             $lastValidation = GeneratedValidatedCode::where('user_id', auth()->id())
-                            ->latest()
-                            ->first();
+                ->latest()
+                ->first();
             if ($lastValidation) {
                 $lastValidation->is_active = false;
                 $lastValidation->update();
@@ -99,8 +104,8 @@ new class extends \Livewire\Volt\Component {
             $this->text = "Generate a formal model in $formalTool for the following requirements: {$this->generatedCode->requirement} of the following code:{$this->generatedCode->generated_code}";
         } else {
             $system_message = "You are an expert in formal verification using $formalTool. Generate a formal model based on the user-provided requirements. Do not include validation constraints that are not explicitly specified in the initial request. Always output the model in a code block with the language specification. You must provide only the formal model, explanations aren't required. Format the answer in markdown.";
-            if(trim($this->text) === ''){
-                $this->result="Error: the text field can't be empty.";
+            if (trim($this->text) === '') {
+                $this->result = "Error: the text field can't be empty.";
                 return;
             }
         }
@@ -158,12 +163,12 @@ new class extends \Livewire\Volt\Component {
                 <x-slot:actions>
                     <div class="flex justify-center w-full">
                         <x-button
-                                  class="btn-secondary"
-                                  type="submit" wire:loading.attr="disabled"
-                                  wire:keydown.ctrl.enter="send">
-                        <span wire:loading.remove wire:target="send">Generate the formal model</span>
-                        <span wire:loading wire:target="send" class="flex items-center">
-                        <x-icon name="o-arrow-path" class="animate-spin mr-2" />
+                            class="btn-secondary"
+                            type="submit" wire:loading.attr="disabled"
+                            wire:keydown.ctrl.enter="send">
+                            <span wire:loading.remove wire:target="send">Generate the formal model</span>
+                            <span wire:loading wire:target="send" class="flex items-center">
+                        <x-icon name="o-arrow-path" class="animate-spin mr-2"/>
                         Generating the formal model...
                         </span>
                         </x-button>
@@ -186,9 +191,9 @@ new class extends \Livewire\Volt\Component {
             <x-slot:actions>
                 <x-button class="btn-primary" type="submit" wire:loading.attr="disabled"
                           wire:keydown.ctrl.enter="send">
-                <span wire:loading.remove wire:target="send">Send</span>
-                <span wire:loading wire:target="send" class="flex items-center">
-                 <x-icon name="o-arrow-path" class="animate-spin mr-2" />
+                    <span wire:loading.remove wire:target="send">Send</span>
+                    <span wire:loading wire:target="send" class="flex items-center">
+                 <x-icon name="o-arrow-path" class="animate-spin mr-2"/>
                  Sending...
                 </span>
                 </x-button>

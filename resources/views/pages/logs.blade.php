@@ -3,6 +3,7 @@
 use App\Models\GeneratedCode;
 use App\Models\GeneratedFormalModel;
 use App\Models\GeneratedValidatedCode;
+use App\Settings\CodeGeneratorSettings;
 use Illuminate\Database\Eloquent\Collection;
 use Livewire\Attributes\Computed;
 use Livewire\WithPagination;
@@ -13,7 +14,7 @@ new class extends \Livewire\Volt\Component {
     #[Computed]
     public function validated(): Collection
     {
-        return GeneratedValidatedCode::all()->map(function ($item){
+        return GeneratedValidatedCode::all()->map(function ($item) {
             $item->generator_type = $item->generator_type === 'App\Models\GeneratedFormalModel' ? 'Code generation' : 'Formal Model generation';
             $item->validation_process = json_encode($item->validation_process, JSON_PRETTY_PRINT);
             return $item;
@@ -47,12 +48,30 @@ new class extends \Livewire\Volt\Component {
                      :rows="$this->validated()"
                      class="whitespace-nowrap"
                      striped
-            />
-        </div>
+            >
+            <x-slot name="body">
+                @foreach($this->validated() as $row)
+                    <tr>
+                        <td>{{ $row->id }}</td>
+                        <td>{{ $row->generator_type }}</td>
+                        <td class="truncate max-w-[10px] hover:overflow-visible" title="{{ $row->system_message }}">
+                            {{ $row->system_message }}
+                        </td>
+                        <td>{{ $row->validated_code }}</td>
+                        <td><pre>{{ $row->validation_process }}</pre></td>
+                        <td>{{ $row->test_result }}</td>
+                        <td>{{ $row->iteration }}</td>
+                        <td>{{ $row->llm_used }}</td>
 
+                    </tr>
+                @endforeach
+            </x-slot>
+            </x-table>
+        </div>
     </x-form>
+
     <div class="mt-5">
-        <x-button class="btn-primary">Export</x-button>
+        <x-button class="btn-primary" disabled>Export</x-button>
     </div>
 
 </x-card>
