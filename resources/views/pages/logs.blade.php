@@ -11,29 +11,69 @@ use Livewire\WithPagination;
 new class extends \Livewire\Volt\Component {
     use withPagination;
 
-    #[Computed]
+//    #[Computed]
     public function validated(): Collection
     {
-        return GeneratedValidatedCode::all()->map(function ($item) {
+        return GeneratedValidatedCode::where('user_id', auth()->id())
+            ->latest()
+            ->take(10)
+            ->get()
+            ->map(function ($item) {
             $item->generator_type = $item->generator_type === 'App\Models\GeneratedFormalModel' ? 'Code generation' : 'Formal Model generation';
             $item->validation_process = json_encode($item->validation_process, JSON_PRETTY_PRINT);
             return $item;
         });
     }
 
+    public function render():  \Illuminate\Contracts\View\View
+    {
+        return view('pages.logs',[
+            'validated' => $this->validated(),
+        ]);
+    }
+
+
     #[Computed]
     public function headers(): array
     {
         return [
-            ['key' => 'id', 'label' => '#'],
             ['key' => 'generator_type', 'label' => 'Process start from'],
             ['key' => 'system_message', 'label' => 'Validation system message'],
             ['key' => 'validated_code', 'label' => 'Final validated code'],
             ['key' => 'validation_process', 'label' => 'Process'],
-            ['key' => 'test_result', 'label' => 'Test result'],
             ['key' => 'iteration', 'label' => 'Iteration'],
+            ['key' => 'test_result', 'label' => 'Test result'],
             ['key' => 'llm_used', 'label' => 'LLM'],
         ];
+    }
+
+    public function exportAll()
+    {
+        $data = GeneratedValidatedCode::latest()->get();
+        $filename = 'validated_codes_' . now()->format('Y-m-d_H-i-s') . '.csv';
+
+        $handle = fopen(storage_path('app/' . $filename), 'w');
+        fputcsv($handle, ['Start from', 'System Message', 'Validated Code', 'Validation Process', 'Iteration', 'Test Result', 'LLM Used']);
+
+        foreach ($data as $code) {
+            $generatorType = $code->generator_type === 'App\Models\GeneratedFormalModel'
+                ? 'Code generation'
+                : 'Formal Model generation';
+
+            fputcsv($handle, [
+                $generatorType,
+                $code->system_message,
+                $code->validated_code,
+//                $code->validation_process,
+                $code->iteration,
+                $code->test_result,
+                $code->llm_used->value,
+            ]);
+        }
+
+        fclose($handle);
+
+        return response()->download(storage_path('app/' . $filename))->deleteFileAfterSend();
     }
 
 }
@@ -41,37 +81,43 @@ new class extends \Livewire\Volt\Component {
 
 
 <x-card title="Logs"
-        subtitle="Here you can find and download all the data by all users." shadow separator>
-    <x-form>
-        <div class="overflow-x-auto">
-            <x-table :headers="$this->headers()"
-                     :rows="$this->validated()"
-                     class="whitespace-nowrap"
-                     striped
-            >
-            <x-slot name="body">
-                @foreach($this->validated() as $row)
-                    <tr>
-                        <td>{{ $row->id }}</td>
-                        <td>{{ $row->generator_type }}</td>
-                        <td class="truncate max-w-[10px] hover:overflow-visible" title="{{ $row->system_message }}">
-                            {{ $row->system_message }}
-                        </td>
-                        <td>{{ $row->validated_code }}</td>
-                        <td><pre>{{ $row->validation_process }}</pre></td>
-                        <td>{{ $row->test_result }}</td>
-                        <td>{{ $row->iteration }}</td>
-                        <td>{{ $row->llm_used }}</td>
+        subtitle="Here you can see your latest results and download all the data by all users." shadow separator>
 
-                    </tr>
+    <x-form>
+    <div class="overflow-x-auto  shadow sm:rounded-lg">
+        <table class="min-w-full table-auto">
+            <thead class="bg-base-300">
+            <tr>
+                @foreach ($this->headers as $header)
+                    <th class="px-6 py-3 text-left text-xs font-medium uppercase whitespace-nowrap">
+                        {{ $header['label'] }}
+                    </th>
                 @endforeach
-            </x-slot>
-            </x-table>
-        </div>
+            </tr>
+            </thead>
+            <tbody class=" divide-y">
+            @foreach($validated as $code)
+                <tr>
+                    <td class="px-6 py-4 text-sm truncate whitespace-nowrap" title="{{ $code->generator_type }}">{{ $code->generator_type }}</td>
+                    <td class="px-6 py-4 text-sm overflow-x-auto whitespace-nowrap" title="{{ $code->system_message }}">{{ Str::limit($code->system_message, 50) }}</td>
+                    <td class="px-6 py-4 text-sm truncate whitespace-nowrap" title="{{ $code->validated_code }}">
+                        <code>{{ Str::limit($code->validated_code, 50) }}</code>
+                    </td>
+                    <td class="px-6 py-4 text-sm truncate whitespace-nowrap">
+                        <pre>{{ Str::limit($code->validation_process, 50) }}</pre>
+                    </td>
+                    <td class="px-6 py-4 text-sm whitespace-nowrap">{{ $code->iteration }}</td>
+                    <td class="px-6 py-4 text-sm truncate whitespace-nowrap" title="{{ $code->test_result }}">{{ Str::limit($code->test_result, 50) }}</td>
+                    <td class="px-6 py-4 text-sm whitespace-nowrap">{{ $code->llm_used }}</td>
+                </tr>
+            @endforeach
+            </tbody>
+        </table>
+    </div>
     </x-form>
 
     <div class="mt-5">
-        <x-button class="btn-primary" disabled>Export</x-button>
+        <x-button class="btn-primary" wire:click="exportAll" disabled>Export</x-button>
     </div>
 
 </x-card>

@@ -8,7 +8,7 @@ use App\Enums\LLM;
 use App\Models\GeneratedCode;
 use App\Models\GeneratedFormalModel;
 use App\Models\GeneratedValidatedCode;
-use App\Settings\CodeGeneratorSettings;
+use App\Models\UserSetting;
 use App\Traits\ExtractCodeTrait;
 use Illuminate\Http\Client\ConnectionException;
 
@@ -17,7 +17,9 @@ class CodeValidationAction
     use ExtractCodeTrait;
 
     public function __construct(
-        private readonly CodeGeneratorSettings $settings,
+//        private readonly CodeGeneratorSettings $settings,
+        private readonly ?UserSetting $settings,
+
 //        private readonly ResetGeneratorsAction $resetGeneratorsAction,
     )
     {

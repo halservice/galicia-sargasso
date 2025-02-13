@@ -29,7 +29,7 @@ class ChatGPT
         try{
             $response = Http::withToken(config('services.openai.api_key'))
                 ->post("https://api.openai.com/v1/chat/completions", [
-                    'model' => "gpt-4o-mini",
+                    'model' => "gpt-4o",
                     'messages' => $message,
                 ])
                 ->json();

@@ -85,21 +85,27 @@ new class extends \Livewire\Volt\Component {
     <x-drawer wire:model="showDrawer" class="w-11/12 lg:w-1/3" right>
         <div>
             @if($activeContent === 'firstCode')
-                <pre><code>{{ $this->generatedCode->generated_code }}</code></pre>
+                <pre><code id="copyContent">{{ $this->generatedCode->generated_code }}</code></pre>
             @elseif($activeContent === 'formal')
-                <pre><code>{{ $this->generatedFormal->generated_formal_model }}</code></pre>
+                <pre><code id="copyContent">{{ $this->generatedFormal->generated_formal_model }}</code></pre>
             @elseif($activeContent === 'test')
-                {!! Str::markdown($this->generatedFormal->test_case) !!}
+                <div id="copyContent">{!! Str::markdown($this->generatedFormal->test_case) !!}</div>
             @elseif($activeContent === 'testResult')
-                {!! Str::markdown($this->generatedValidation->test_result) !!}
+                <div id="copyContent">{!! Str::markdown($this->generatedValidation->test_result) !!}</div>
             @elseif($activeContent === 'iteration')
-                <pre><code>{{ $this->iterations[$this->iterationNumber]['validated_codes'] }}</code></pre>
+                <pre><code id="copyContent">{{ $this->iterations[$this->iterationNumber]['validated_codes'] }}</code></pre>
             @endif
         </div>
         <br>
-        <x-button label="Close" class="btn-primary" @click="$wire.showDrawer = false"/>
-        <x-button label="Copy" class="btn-secondary" @click="copy()" disabled/>
-    </x-drawer>
+{{--        <div x-data="{ showMessage: false }">--}}
+            <x-button label="Close" class="btn-primary" @click="$wire.showDrawer = false"/>
+            <x-button label="Copy" class="btn-secondary" @click="copy()"/>
+{{--            <x-button label="Copy" class="btn-secondary"--}}
+{{--                      @click="copy(); showMessage = true; setTimeout(() => showMessage = false, 2000)"/>--}}
+
+{{--            <span x-show="showMessage" x-transition.opacity.duration.500ms class="text-green-500 font-bold mt-2 font">Copied!</span>--}}
+{{--        </div>--}}
+        </x-drawer>
 
     <x-form>
         @if($this->generatedValidation?->is_active)
@@ -149,5 +155,9 @@ new class extends \Livewire\Volt\Component {
 
 </x-card>
 
-
-
+<script>
+    function copy() {
+        let text = document.getElementById('copyContent').innerText;
+        navigator.clipboard.writeText(text);
+    }
+</script>
