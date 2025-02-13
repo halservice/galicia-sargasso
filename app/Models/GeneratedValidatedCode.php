@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Enums\LLM;
-use App\Settings\CodeGeneratorSettings;
 use App\Traits\HasActiveColumn;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -25,7 +24,7 @@ class GeneratedValidatedCode extends Model
 
     public static function log(Model $generator, string $testResult, array $validationProcess, string $systemMessage, string $generatedValidatedCode): self
     {
-        $setting = app(CodeGeneratorSettings::class);
+        $setting = UserSetting::where('user_id',auth()->id())->first();
 
         return tap((new static())
             ->forceFill([

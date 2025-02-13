@@ -27,7 +27,7 @@ class GeneratedFormalModel extends Model
 
     public static function log(?int $generatedCodeId, string $testCase, string $systemMessage, string $requirement, string $generatedFormalModel): static
     {
-        $setting = app(CodeGeneratorSettings::class);
+        $setting = UserSetting::where('user_id',auth()->id())->first();
 
         $formal = (new static())
             ->forceFill([

@@ -27,7 +27,7 @@ class GeneratedCode extends Model
 
     public static function log(?int $generatedFormalId, string $systemMessage, string $requirement, string $generatedCode): static
     {
-        $setting = app(CodeGeneratorSettings::class);
+        $setting = UserSetting::where('user_id',auth()->id())->first();
 
         return tap((new static())
             ->forceFill([
