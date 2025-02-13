@@ -31,9 +31,10 @@ class CodeValidationAction
      */
     public function __invoke(GeneratedCode $code, GeneratedFormalModel $formalModel): GeneratedValidatedCode
     {
-        $iterations = $this->settings->iteration;
+        $settings = UserSetting::where('user_id', auth()->id())->first();
+        $iterations = $settings->iteration;
 
-        $coder = match ($this->settings->llm_code) {
+        $coder = match ($settings->llm_code) {
             LLM::Llama->value => new LLama(),
             default => new ChatGPT()
         };
@@ -87,7 +88,7 @@ class CodeValidationAction
         $checkTest = $coder->send($checkTest);
 
         return GeneratedValidatedCode::log(
-            $this->settings->startFromGeneratedCode() ? $formalModel : $code,
+            $settings->startFromGeneratedCode() ? $formalModel : $code,
             $checkTest,
             $messages,
             $systemMessage,
