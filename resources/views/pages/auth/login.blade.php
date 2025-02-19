@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use App\Models\UserSetting;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
@@ -21,6 +22,8 @@ new class extends \Livewire\Volt\Component {
      */
     public function authenticate(Request $request): RedirectResponse
     {
+        $this->validate();
+
         $credentials = [
             'email' => $this->email,
             'password' => $this->password,
@@ -30,6 +33,8 @@ new class extends \Livewire\Volt\Component {
             $request->session()->regenerate();
             $this->redirectIntended(default: route('home', absolute: false), navigate: true);
         }
+
+        $this->addError('email', 'The provided credentials do not match our records.');
 
         return back()->withErrors([
             'email' => 'The provided credentials do not match our records.',
@@ -50,11 +55,18 @@ new class extends \Livewire\Volt\Component {
         <x-form wire:submit="authenticate" no-separator>
             <x-input label="Email" wire:model="email" icon="o-user" inline/>
             <x-input label="Password" wire:model="password" type="password" icon="o-key" inline/>
+            <a class="text-xs text-center underline" href="/forgot-password">
+                Forgot your password?
+            </a>
 
             <x-slot:actions>
                 <x-button label="Login" type="submit" icon="o-paper-airplane" class="btn-primary" spinner="login"/>
             </x-slot:actions>
+
         </x-form>
+        <p class="text-xs text-right mt-3">
+            Don't have an account? <a class="text-primary underline" href="/register">Sign up!</a>
+        </p>
 
     </div>
 </div>

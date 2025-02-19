@@ -1,6 +1,9 @@
 <?php
 
 use Livewire\Volt\Volt;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Password;
+
 
 Volt::route('/','home')
     ->name('home')
@@ -31,7 +34,21 @@ Volt::route('/logs', 'logs')
     ->middleware('auth');
 
 Volt::route('/login', 'auth.login')
-    ->name('login');
+    ->name('login')
+    ->middleware('guest');
+
+Volt::route('/register', 'auth.register')
+    ->name('register')
+    ->middleware('guest');
+
+Volt::route('/forgot-password', 'auth.forgot-password')
+    ->name('forgot-password')
+    ->middleware('guest');
+
+
+Volt::route('/reset-password/{token}', 'auth.reset-password')
+    ->name('password.reset')
+    ->middleware('guest');
 
 Route::get('/logout', function (){
     auth()->logout();
@@ -40,3 +57,5 @@ Route::get('/logout', function (){
 
     return redirect('/login');
     });
+
+
