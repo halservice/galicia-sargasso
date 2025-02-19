@@ -39,14 +39,7 @@ services:
         networks:
             - sail
         healthcheck:
-            test:
-                - CMD
-                - pg_isready
-                - '-q'
-                - '-d'
-                - '${DB_DATABASE}'
-                - '-U'
-                - '${DB_USERNAME}'
+            test: ["CMD-SHELL", "pg_isready -q -d $${DB_DATABASE} -U $${DB_USERNAME}"]
             retries: 3
             timeout: 5s
     mailpit:
