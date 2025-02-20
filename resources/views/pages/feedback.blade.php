@@ -116,9 +116,9 @@ new class extends \Livewire\Volt\Component {
                 </b></i>
 
             <div class="flex justify-left w-full gap-5">
-                <x-button label="Show First Generated Code" class="btn-primary"
+                <x-button label="Show first generated code" class="btn-primary"
                           wire:click="$set('activeContent', 'firstCode'); $wire.showDrawer = true"/>
-                <x-button label="Show Formal Model" class="btn-primary"
+                <x-button label="Show formal model" class="btn-primary"
                           wire:click="$set('activeContent', 'formal'); $wire.showDrawer = true"/>
             </div>
 
@@ -133,7 +133,7 @@ new class extends \Livewire\Volt\Component {
                     @endforeach
                 </ul>
                 <div class="flex justify-left w-full gap-5">
-                    <x-button label="Show Validated Code" class="btn-secondary"
+                    <x-button label="Show validated code" class="btn-secondary"
                               wire:click="showIteration({{ $index }}, 'iteration')"/>
                 </div>
             @endforeach
@@ -141,9 +141,9 @@ new class extends \Livewire\Volt\Component {
             <h2 class="font-bold text-primary text-xl mt-4">Test:</h2>
             <p>The platform produces a few test cases, here you can find more about it.</p>
             <div class="flex justify-left w-full gap-5">
-                <x-button label="Show Generated Test Cases" class="btn-primary"
+                <x-button label="Show generated test cases" class="btn-primary"
                           wire:click="$set('activeContent', 'test'); $wire.showDrawer = true"/>
-                <x-button label="Show If The Test Cases Passed" class="btn-primary"
+                <x-button label="Show if the test cases passed" class="btn-primary"
                           wire:click="$set('activeContent', 'testResult'); $wire.showDrawer = true"/>
             </div>
         @else
