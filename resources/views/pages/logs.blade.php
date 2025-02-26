@@ -1,5 +1,6 @@
 <?php
 
+use App\Exports\ValidatedCodesExport;
 use App\Models\GeneratedCode;
 use App\Models\GeneratedFormalModel;
 use App\Models\GeneratedValidatedCode;
@@ -7,6 +8,7 @@ use App\Settings\CodeGeneratorSettings;
 use Illuminate\Database\Eloquent\Collection;
 use Livewire\Attributes\Computed;
 use Livewire\WithPagination;
+use Maatwebsite\Excel\Facades\Excel;
 
 new class extends \Livewire\Volt\Component {
     use withPagination;
@@ -15,13 +17,13 @@ new class extends \Livewire\Volt\Component {
     public function validated(): Collection
     {
         return GeneratedValidatedCode::with(['generator' => function ($query) {
-                if ($query->getModel() instanceof GeneratedCode) {
-                    $query->with('formalModel'); // Carichiamo solo se è un GeneratedCode
-                }
-                if ($query->getModel() instanceof GeneratedFormalModel) {
-                    $query->with('generatedCode'); // Carichiamo solo se è un GeneratedFormalModel
-                }
-            }])
+            if ($query->getModel() instanceof GeneratedCode) {
+                $query->with('formalModel'); // Carichiamo solo se è un GeneratedCode
+            }
+            if ($query->getModel() instanceof GeneratedFormalModel) {
+                $query->with('generatedCode'); // Carichiamo solo se è un GeneratedFormalModel
+            }
+        }])
             ->where('user_id', auth()->id())
             ->latest()
             ->take(10)
@@ -61,15 +63,20 @@ new class extends \Livewire\Volt\Component {
 
                 $item->generator_type = $item->generator_type === 'App\Models\GeneratedFormalModel' ? 'Code generation' : 'Formal Model generation';
                 $item->validation_process = json_encode($item->validation_process, JSON_PRETTY_PRINT);
-            return $item;
-        });
+                return $item;
+            });
     }
 
-    public function render():  \Illuminate\Contracts\View\View
+    public function render(): \Illuminate\Contracts\View\View
     {
-        return view('pages.logs',[
+        return view('pages.logs', [
             'validated' => $this->validated(),
         ]);
+    }
+
+    public function export()
+    {
+        return Excel::download(new ValidatedCodesExport, 'validated-codes-' . now()->format('Y-m-d') . '.xlsx');
     }
 
 
@@ -95,35 +102,6 @@ new class extends \Livewire\Volt\Component {
             ['key' => 'test_cases', 'label' => 'Generated test'],
             ['key' => 'test_result', 'label' => 'Test result'],
         ];
-    }
-
-    public function exportAll()
-    {
-        $data = GeneratedValidatedCode::latest()->get();
-        $filename = 'validated_codes_' . now()->format('Y-m-d_H-i-s') . '.csv';
-
-        $handle = fopen(storage_path('app/' . $filename), 'w');
-        fputcsv($handle, ['Start from', 'System Message', 'Validated Code', 'Validation Process', 'Iteration', 'Test Result', 'LLM Used']);
-
-        foreach ($data as $code) {
-            $generatorType = $code->generator_type === 'App\Models\GeneratedFormalModel'
-                ? 'Code generation'
-                : 'Formal Model generation';
-
-            fputcsv($handle, [
-                $generatorType,
-                $code->system_message,
-                $code->validated_code,
-//                $code->validation_process,
-                $code->iteration,
-                $code->test_result,
-                $code->llm_used->value,
-            ]);
-        }
-
-        fclose($handle);
-
-        return response()->download(storage_path('app/' . $filename))->deleteFileAfterSend();
     }
 
 }
@@ -171,35 +149,9 @@ new class extends \Livewire\Volt\Component {
         </div>
     </x-form>
 
-
-
-{{--            <tbody class=" divide-y">--}}
-{{--            @foreach($validated as $code)--}}
-{{--                <tr>--}}
-{{--                    <td class="px-6 py-4 text-sm truncate whitespace-nowrap" title="{{ $code->generator_type }}">{{ $code->generator_type }}</td>--}}
-{{--                    <td class="px-6 py-4 text-sm overflow-x-auto whitespace-nowrap" title="{{ $code->user_input }}">{{ Str::limit($code->user_input, 50) }}</td>--}}
-{{--                    <td class="px-6 py-4 text-sm truncate whitespace-nowrap" title="{{ $code->first_code }}">--}}
-{{--                        <code>{{ Str::limit($code->first_code, 50) }}</code>--}}
-{{--                    </td>--}}
-{{--                    <td class="px-6 py-4 text-sm truncate whitespace-nowrap" title="{{ $code->formal_model }}">--}}
-{{--                        <code>{{ Str::limit($code->formal_model, 50) }}</code>--}}
-{{--                    </td>--}}
-
-{{--                    <td class="px-6 py-4 text-sm overflow-x-auto whitespace-nowrap" title="{{ $code->system_message }}">{{ Str::limit($code->system_message, 50) }}</td>--}}
-{{--                    <td class="px-6 py-4 text-sm truncate whitespace-nowrap" title="{{ $code->validated_code }}">--}}
-{{--                        <code>{{ Str::limit($code->validated_code, 50) }}</code>--}}
-{{--                    </td>--}}
-{{--                    <td class="px-6 py-4 text-sm truncate whitespace-nowrap">--}}
-{{--                        <pre>{{ Str::limit($code->validation_process, 50) }}</pre>--}}
-{{--                    </td>--}}
-{{--                    <td class="px-6 py-4 text-sm whitespace-nowrap">{{ $code->iteration }}</td>--}}
-{{--                    <td class="px-6 py-4 text-sm truncate whitespace-nowrap" title="{{ $code->test_result }}">{{ Str::limit($code->test_result, 50) }}</td>--}}
-{{--                    <td class="px-6 py-4 text-sm whitespace-nowrap">{{ $code->llm_used }}</td>--}}
-{{--                    <td class="px-6 py-4 text-sm whitespace-nowrap">{{ $code->programming_language }}</td>--}}
-
-
     <div class="mt-5">
-        <x-button class="btn-primary" wire:click="exportAll" disabled>Export</x-button>
+        <x-button class="btn-primary" wire:click="export">Export</x-button>
     </div>
+
 
 </x-card>

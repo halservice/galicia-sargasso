@@ -97,14 +97,9 @@ new class extends \Livewire\Volt\Component {
             @endif
         </div>
         <br>
-{{--        <div x-data="{ showMessage: false }">--}}
             <x-button label="Close" class="btn-primary" @click="$wire.showDrawer = false"/>
             <x-button label="Copy" class="btn-secondary" @click="copy()"/>
-{{--            <x-button label="Copy" class="btn-secondary"--}}
-{{--                      @click="copy(); showMessage = true; setTimeout(() => showMessage = false, 2000)"/>--}}
 
-{{--            <span x-show="showMessage" x-transition.opacity.duration.500ms class="text-green-500 font-bold mt-2 font">Copied!</span>--}}
-{{--        </div>--}}
         </x-drawer>
 
     <x-form>

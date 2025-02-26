@@ -50,11 +50,12 @@
                 <x-menu-separator />
 
             <x-menu-item title="Source Code Generator" icon="o-code-bracket" link="/source-code-generator" />
-            <x-menu-item title="Formal Model Generator" subtitle="Generates a formal model of the source code" icon="o-document" link="/formal-model-generator" />
-            <x-menu-item title="Code Validation" subtitle="Automatically checks the generated code" icon="o-check-badge" link="/code-validation" />
-            <x-menu-item title="Feedback" subtitle="Provides detailed feedback of the generated code" icon="o-chart-bar-square" link="/feedback" />
-            <x-menu-item title="Settings" subtitle="Customizes the maximum number of iterations" icon="o-cog-6-tooth" link="/settings" />
-            <x-menu-item title="Logs" subtitle="Customizes the maximum number of iterations" icon="o-archive-box" link="/logs" />
+            <x-menu-item title="Formal Model Generator"  icon="o-document" link="/formal-model-generator" />
+            <x-menu-item title="Code Validation"  icon="o-check-badge" link="/code-validation" />
+            <x-menu-item title="Feedback" icon="o-chart-bar-square" link="/feedback" />
+            <x-menu-item title="Settings" icon="o-cog-6-tooth" link="/settings" />
+            <x-menu-item title="Statistics"  icon="o-chart-pie" link="/statistics" />
+            <x-menu-item title="Logs" icon="o-archive-box" link="/logs" />
 
         </x-menu>
     </x-slot:sidebar>

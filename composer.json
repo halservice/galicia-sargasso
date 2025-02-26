@@ -7,10 +7,12 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
+        "arielmejiadev/larapex-charts": "^2.1",
         "laravel/framework": "^11.31",
         "laravel/tinker": "^2.9",
         "livewire/livewire": "^3.5",
         "livewire/volt": "^1.6",
+        "maatwebsite/excel": "^3.1",
         "openai-php/laravel": "^0.10.2",
         "robsontenorio/mary": "^1.41",
         "spatie/laravel-settings": "^3.4"
