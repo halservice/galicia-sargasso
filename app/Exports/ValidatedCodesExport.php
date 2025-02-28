@@ -2,7 +2,6 @@
 
 namespace App\Exports;
 
-use App\Enums\LLM;
 use App\Models\GeneratedCode;
 use App\Models\GeneratedFormalModel;
 use App\Models\GeneratedValidatedCode;
@@ -66,26 +65,26 @@ class ValidatedCodesExport implements FromCollection, WithHeadings, WithMapping
             });
     }
 
-    public function map($item): array
+    public function map($row): array
     {
         return [
-            $item->generator_type,
-            $item->user_input,
-            $item->first_code,
-            $item->system_code,
-            $item->programming_language,
-            $item->code_LLM,
-            $item->formal_model,
-            $item->system_formal,
-            $item->formal_model_tool,
-            $item->formal_LLM,
-            $item->validated_code,
-            $item->system_message,
-            $item->validation_process,
-            $item->iteration,
-            $item->llm_used->value,
-            $item->test_cases,
-            $item->test_result,
+            $row->generator_type,
+            $row->user_input,
+            $row->first_code,
+            $row->system_code,
+            $row->programming_language,
+            $row->code_LLM,
+            $row->formal_model,
+            $row->system_formal,
+            $row->formal_model_tool,
+            $row->formal_LLM,
+            $row->validated_code,
+            $row->system_message,
+            $row->validation_process,
+            $row->iteration,
+            $row->llm_used->value,
+            $row->test_cases,
+            $row->test_result,
         ];
     }
 

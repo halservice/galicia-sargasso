@@ -32,10 +32,10 @@ Volt::route('/settings', 'settings')
 Volt::route('/logs', 'logs')
     ->name('logs')
     ->middleware('auth');
-
-Volt::route('/statistics', 'statistics')
-    ->name('statistics')
-    ->middleware('auth');
+//
+//Volt::route('/statistics', 'statistics')
+//    ->name('statistics')
+//    ->middleware('auth');
 
 Volt::route('/login', 'auth.login')
     ->name('login')

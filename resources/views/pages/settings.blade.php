@@ -53,13 +53,6 @@ new class extends \Livewire\Volt\Component {
         $this->llm_validation = $this->settings->llm_validation;
         $this->iteration = $this->settings->iteration;
         $this->sequence = $this->settings->sequence;
-//        $this->language = $this->settings->programming_language;
-//        $this->model = $this->settings->model_tool;
-//        $this->llm_code = $this->settings->llm_code;
-//        $this->llm_formal = $this->settings->llm_formal;
-//        $this->llm_validation = $this->settings->llm_validation;
-//        $this->iteration = $this->settings->iteration;
-//        $this->sequence = $this->settings->sequence;
     }
 
     public function with(): array
