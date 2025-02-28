@@ -12,39 +12,86 @@ use IcehouseVentures\LaravelChartjs\Builder;
 
 new class extends Component {
 
-    #[Computed]
-    public function chart()
+    public int $currentYear = 0;
+    public int $totalCount = 0;
+
+    public function mount()
     {
+        $this->currentYear = now()->year;
+
+        $this->totalCount = GeneratedValidatedCode::select('id')
+            ->whereYear('created_at', $this->currentYear)
+            ->get()
+            ->count();
+
+    }
+
+    #[Computed]
+    public function monthlyChart()
+    {
+        $validatedCodes = GeneratedValidatedCode::select('id')
+            ->whereYear('created_at', $this->currentYear)
+            ->get()
+            ->groupBy(function ($date){
+                return \Carbon\Carbon::parse($date->created_at)->format('m');
+                });
+
+        $validatedCodesMonthly = [];
+        $monthArr = [];
+
+        foreach ($validatedCodes as $key => $value){
+            $validatedCodesMonthly[(int)$key] = count($value);
+        }
+
+        for($i=1; $i<=12; $i++){
+            if(!empty($validatedCodesMonthly[$i])){
+                $monthArr[$i] = $validatedCodesMonthly[$i];
+                }else{
+                $monthArr[$i] = 0;
+            }
+        }
+
+        $labelsName = collect(range(1, 12))->map(function ($month){
+            return \Carbon\Carbon::create()->month($month)->format('F');
+            })->toArray();
+
         return Chartjs::build()
             ->name('lineChartTest')
             ->type('line')
-            ->size(['width' => 400, 'height' => 200])
-            ->labels(['January', 'February', 'March', 'April', 'May', 'June', 'July'])
+            ->size(['width' => 200, 'height' => 100])
+            ->labels($labelsName)
             ->datasets([
                 [
-                    "label" => "My First dataset",
+                    "label" => "Numbers of completed process in " . $this->currentYear,
                     'backgroundColor' => "rgba(38, 185, 154, 0.31)",
                     'borderColor' => "rgba(38, 185, 154, 0.7)",
                     "pointBorderColor" => "rgba(38, 185, 154, 0.7)",
                     "pointBackgroundColor" => "rgba(38, 185, 154, 0.7)",
                     "pointHoverBackgroundColor" => "#fff",
                     "pointHoverBorderColor" => "rgba(220,220,220,1)",
-                    "data" => [65, 59, 80, 81, 56, 55, 40],
+                    "data" => array_values($monthArr),
                     "fill" => false,
                 ],
-                [
-                    "label" => "My Second dataset",
-                    'backgroundColor' => "rgba(38, 185, 154, 0.31)",
-                    'borderColor' => "rgba(38, 185, 154, 0.7)",
-                    "pointBorderColor" => "rgba(38, 185, 154, 0.7)",
-                    "pointBackgroundColor" => "rgba(38, 185, 154, 0.7)",
-                    "pointHoverBackgroundColor" => "#fff",
-                    "pointHoverBorderColor" => "rgba(220,220,220,1)",
-                    "data" => [12, 33, 44, 44, 55, 23, 40],
-                    "fill" => false,
-                ]
             ])
             ->options([]);
+    }
+
+    #[Computed]
+    public function llmCodeChart()
+    {
+
+    }
+
+    #[Computed]
+    public function llmFormalChart()
+    {
+
+    }
+
+    #[Computed]
+    public function llmValidationChart()
+    {
+
     }
 }
 ?>
@@ -54,8 +101,30 @@ new class extends Component {
         shadow
         separator>
 
-    <div class="w-3/4 mx-auto">
-        <x-chartjs-component :chart="$this->chart" />
+    <div class="font-bold text-2xl text-secondary flex items-center">
+        <h1>Galicia worked on&nbsp;</h1>
+    <span x-data="{ count: 0, target: {{ $this->totalCount }} }"
+          x-init="let interval = setInterval(() => { if(count < target) count++; else clearInterval(interval); }, 20)"
+          x-text="count"
+          class="text-primary">
+    </span>
+        <h1>&nbsp;projects in {{ $this->currentYear }}</h1>
     </div>
+
+    <div class="w-3/4">
+        <x-chartjs-component :chart="$this->monthlyChart" />
+    </div>
+
+{{--    <div class="flex justify-between gap-4">--}}
+{{--        <div class="w-1/3">--}}
+{{--            <x-chartjs-component :chart="$this->llmCodeChart" />--}}
+{{--        </div>--}}
+{{--        <div class="w-1/3">--}}
+{{--            <x-chartjs-component :chart="$this->llmFormalChart" />--}}
+{{--        </div>--}}
+{{--        <div class="w-1/3">--}}
+{{--            <x-chartjs-component :chart="$this->llmValidationChart" />--}}
+{{--        </div>--}}
+{{--    </div>--}}
 
 </x-card>
