@@ -10,11 +10,11 @@ use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 
-class ValidatedCodesExport implements FromCollection, WithHeadings, WithMapping
+class ValidatedCodesExportAll implements FromCollection, WithHeadings, WithMapping
 {
     /**
-     * @return Collection
-     */
+    * @return Collection
+    */
     public function collection(): Collection
     {
         return GeneratedValidatedCode::with(['generator' => function ($query) {
@@ -25,7 +25,6 @@ class ValidatedCodesExport implements FromCollection, WithHeadings, WithMapping
                 $query->with('generatedCode'); // Carichiamo solo se è un GeneratedFormalModel
             }
         }])
-            ->where('user_id', auth()->id())
             ->latest()
             ->get()
             ->map(function ($item) {
