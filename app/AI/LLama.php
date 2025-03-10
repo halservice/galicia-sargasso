@@ -27,7 +27,7 @@ class LLama
     /**
      * @throws ConnectionException
      */
-    public function send(array $message): string
+    public function send(array $message, string $model): string
     {
         try {
             $response = Http::withToken(config('services.mindinabox.api_key'))

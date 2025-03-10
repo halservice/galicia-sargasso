@@ -53,12 +53,6 @@ new class extends \Livewire\Volt\Component {
         $this->settings = UserSetting::where('user_id',auth()->id())->first();
         $this->startFromCode = $this->settings->startFromGeneratedCode();
 
-//        devo aggiungere il controllo su is_active se lo voglio tenere, altrimeni non funziona
-//        $lastFormal = GeneratedFormalModel::orderBy('created_at', 'desc')->first();
-//        if($lastFormal?->created_at->lt(Carbon::now()->subMinutes(30))) {
-//            $this->resetAll();
-//        }
-
         // Se parto dal codice ho bisogno di recuperare info del codice, controllando che questo esista e sia attivo
         $code = GeneratedCode::where('user_id', auth()->id())
             ->latest()
@@ -103,6 +97,7 @@ new class extends \Livewire\Volt\Component {
             $system_message = "You are an expert in formal verification using $formalTool.
             Generate a formal model based on the user-provided requirements and a generated code.
             Do not include validation constraints that are not explicitly specified in the initial request.
+            Do not add initialization instructions in the source code that modify the value of input parameters, even if these instructions are part of the formal model.
             Always output the model in a code block with the language specification.
             You must provide only the formal model, explanations aren't required. Format the answer in markdown.";
             $this->text = "Generate a formal model in $formalTool for the following requirements: {$this->generatedCode->requirement} and the following code:{$this->generatedCode->generated_code}";
@@ -114,6 +109,7 @@ new class extends \Livewire\Volt\Component {
             $system_message = "You are an expert in formal verification using $formalTool.
             Generate a formal model based on the user-provided requirements.
             Do not include validation constraints that are not explicitly specified in the initial request.
+            Do not add initialization instructions in the source code that modify the value of input parameters, even if these instructions are part of the formal model.
             Always output the model in a code block with the language specification.
             You must provide only the formal model, explanations aren't required. Format the answer in markdown.";
             if (trim($this->text) === '') {
@@ -126,8 +122,9 @@ new class extends \Livewire\Volt\Component {
                 2. Each test case is clearly separated by an empty line.";
         }
 
+        $model = \Auth::user()->settings->llm_formal;
         $message = $coder->systemMessage($system_message, $this->text);
-        $response = $coder->send($message);
+        $response = $coder->send($message, $model);
 
         $code = $this->extractCodeFromResponse($response);
 
@@ -149,7 +146,7 @@ new class extends \Livewire\Volt\Component {
                     'content' => $test_case_message
                 ]
             ];
-            $response = $coder->send($message);
+            $response = $coder->send($message, $model);
 
             GeneratedFormalModel::log(
                 $this->startFromCode ? $this->generatedCode->id : null,
@@ -225,9 +222,9 @@ new class extends \Livewire\Volt\Component {
 
 
     @if(isset($result))
-        <div class="rounded-[10px] p-[15px] gap-[5px] w-fit break-words mr-auto mb-5 bg-[#3864fc] text-white mt-5">
+        <div class="rounded-[10px] p-[15px] gap-[5px] w-fit break-words mr-auto mb-5 bg-[#3864fc] text-white mt-5 max-w-4xl">
             <code>
-                <pre>{{ $result }}</pre>
+                <pre class="whitespace-pre-wrap">{{ $result }}</pre>
             </code>
         </div>
     @endif

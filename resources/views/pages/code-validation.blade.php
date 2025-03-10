@@ -45,13 +45,6 @@ new class extends \Livewire\Volt\Component {
 //        $this->settings = app(CodeGeneratorSettings::class);
         $this->settings = UserSetting::where('user_id', auth()->id())->first();
 
-//        devo aggiungere il controllo su is_active se lo voglio tenere, altrimeni non funziona
-//        $lastValidation = GeneratedValidatedCode::orderBy('created_at', 'desc')->first();
-//        if ($lastValidation?->created_at->lt(Carbon::now()->subMinutes(30))) {
-//            $this->resetAll();
-//        }
-
-
         if ($this->settings->startFromGeneratedCode() &&
             ($formal = GeneratedFormalModel::where('user_id', auth()->id())
                 ->latest()
@@ -138,9 +131,9 @@ new class extends \Livewire\Volt\Component {
     {{--        </div>--}}
     {{--    @endif--}}
     @if(isset($result))
-        <div class="rounded-[10px] p-[15px] gap-[5px] w-fit break-words mr-auto mb-5 bg-[#3864fc] text-white mt-5">
+        <div class="rounded-[10px] p-[15px] gap-[5px] w-fit break-words mr-auto mb-5 bg-[#3864fc] text-white mt-5 max-w-4xl">
             <code>
-                <pre>{{ $result }}</pre>
+                <pre class="whitespace-pre-wrap">{{ $result }}</pre>
             </code>
         </div>
     @endif

@@ -6,7 +6,6 @@ use App\AI\LLama;
 use App\Enums\LLM;
 use App\Models\GeneratedCode;
 use App\Models\UserSetting;
-//use App\Settings\CodeGeneratorSettings;
 use App\Models\GeneratedFormalModel;
 use App\Traits\ExtractCodeTrait;
 use Carbon\Carbon;
@@ -52,11 +51,6 @@ new class extends \Livewire\Volt\Component {
         $this->settings = UserSetting::where('user_id',auth()->id())->first();
 
         $this->startFromCode = $this->settings->startFromGeneratedCode();
-//        devo aggiungere il controllo su is_active se lo voglio tenere, altrimeni non funziona
-//        $lastCode = GeneratedCode::orderBy('created_at', 'desc')->first();
-//        if ($lastCode?->created_at->lt(Carbon::now()->subMinutes(30))) {
-//            $this->resetAll();
-//        }
 
         // Se parto dal modello formale ho bisogno di recuperare info del modello formale, controllando che questo esista e sia attivo
         $formal = GeneratedFormalModel::where('user_id', auth()->id())
@@ -111,8 +105,9 @@ new class extends \Livewire\Volt\Component {
             }
         }
 
+        $model = \Auth::user()->settings->llm_code;
         $message = $coder->systemMessage($systemMessage, $this->text);
-        $response = $coder->send($message);
+        $response = $coder->send($message, $model);
 
         $code = $this->extractCodeFromResponse($response);
 
@@ -191,9 +186,9 @@ new class extends \Livewire\Volt\Component {
     @endif
 
     @if(isset($result))
-        <div class="rounded-[10px] p-[15px] gap-[5px] w-fit break-words mr-auto mb-5 bg-[#3864fc] text-white mt-5">
+        <div class="rounded-[10px] p-[15px] gap-[5px] w-fit break-words mr-auto mb-5 bg-[#3864fc] text-white mt-5 max-w-4xl">
             <code>
-                <pre>{{ $result }}</pre>
+                <pre class="whitespace-pre-wrap">{{ $result }}</pre>
             </code>
         </div>
     @endif

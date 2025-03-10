@@ -9,12 +9,14 @@ use App\Models\GeneratedCode;
 use App\Models\GeneratedFormalModel;
 use App\Models\GeneratedValidatedCode;
 use App\Models\UserSetting;
+use App\Traits\checkChanges;
 use App\Traits\ExtractCodeTrait;
 use Illuminate\Http\Client\ConnectionException;
 
 class CodeValidationAction
 {
     use ExtractCodeTrait;
+    use CheckChanges;
 
     public function __construct(
 //        private readonly CodeGeneratorSettings $settings,
@@ -38,6 +40,8 @@ class CodeValidationAction
             LLM::Llama->value => new LLama(),
             default => new ChatGPT()
         };
+        $model = \Auth::user()->settings->llm_validation;
+
 
 //        ($this->resetGeneratorsAction)();
 
@@ -55,14 +59,14 @@ class CodeValidationAction
 //            $this->req = "Validating the code... Iteration: $i/$iterations";
 //            $this->stream(to: 'req', content: $this->req);
 
-            $response = $coder->send($message);
+            $response = $coder->send($message, $model);
 
             $messages[] = [
                 'role' => 'assistant',
                 'content' => $response,
             ];
 
-            $flag = $this->checkChanges($response);
+            $flag = $this->checkChange($response);
             $currentCode = $this->extractCodeFromResponse($response);
 
             if (!$flag && $i + 1 <= $iterations) {
@@ -92,7 +96,7 @@ class CodeValidationAction
 
         $checkUserMessage = "Here is the code $currentCode and here are the tests {$formalModel->test_case}.";
         $checkTest = $coder->systemMessage($checkSystemMessage, $checkUserMessage);
-        $checkTest = $coder->send($checkTest);
+        $checkTest = $coder->send($checkTest, $model);
 
         return GeneratedValidatedCode::log(
             $settings->startFromGeneratedCode() ? $formalModel : $code,
@@ -103,15 +107,22 @@ class CodeValidationAction
         );
     }
 
-    protected function checkChanges(string $response): bool
+    protected function checkChange(string $response): bool
     {
-        if (preg_match('/Number of changes made:\s*(\d+)/i', $response, $matches)) {
-            $number = (int)trim($matches[1]);
-            if ($number === 0) {
-                return true;
-            }
+//        if (preg_match('/Number of changes made:\s*(\d+)/i', $response, $matches)) {
+//            $number = (int)trim($matches[1]);
+//            if ($number === 0) {
+//                return true;
+//            }
+//        }
+//
+//        return false;
+
+        $number = $this->checkChanges($response);
+        if($number === 0){
+            return true;
         }
 
-        return false;
+        return  false;
     }
 }

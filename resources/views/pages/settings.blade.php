@@ -100,7 +100,7 @@ new class extends \Livewire\Volt\Component {
             placeholder="Select a sequence..."
             :options="$sequences"
             option-value="value"
-            option-label="text"
+            option-label="value"
         />
 
         <x-select
@@ -110,7 +110,7 @@ new class extends \Livewire\Volt\Component {
             placeholder="Select a language..."
             :options="$languages"
             option-value="value"
-            option-label="text"
+            option-label="value"
         />
 
         <x-select
@@ -120,7 +120,7 @@ new class extends \Livewire\Volt\Component {
             placeholder="Select a LLM..."
             :options="$llms"
             option-value="value"
-            option-label="text"
+            option-label="value"
         />
 
         <x-select
@@ -130,7 +130,7 @@ new class extends \Livewire\Volt\Component {
             placeholder="Select a model..."
             :options="$models"
             option-value="value"
-            option-label="text"
+            option-label="value"
         />
 
         <x-select
@@ -140,7 +140,7 @@ new class extends \Livewire\Volt\Component {
             placeholder="Select a LLM..."
             :options="$llms"
             option-value="value"
-            option-label="text"
+            option-label="value"
         />
 
         <x-input
@@ -157,7 +157,7 @@ new class extends \Livewire\Volt\Component {
             placeholder="Select a LLM..."
             :options="$llms"
             option-value="value"
-            option-label="text"
+            option-label="value"
         />
 
         <x-slot:actions>

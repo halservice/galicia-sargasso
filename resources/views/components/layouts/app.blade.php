@@ -6,7 +6,6 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ isset($title) ? $title.' - '.config('app.name') : config('app.name') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-
     <link rel="icon" href="{{ asset('images/webicon.png') }}" type="image/png">
 </head>
 <body class="min-h-screen font-sans antialiased bg-base-200/50 dark:bg-base-200">
@@ -53,7 +52,7 @@
             <x-menu-item title="Code Validation"  icon="o-check-badge" link="/code-validation" />
             <x-menu-item title="Feedback" icon="o-chart-bar-square" link="/feedback" />
             <x-menu-item title="Settings" icon="o-cog-6-tooth" link="/settings" />
-            <x-menu-item title="Statistics"  icon="o-chart-pie" link="/statistics" />
+{{--            <x-menu-item title="Statistics"  icon="o-chart-pie" link="/statistics" />--}}
             <x-menu-item title="Logs" icon="o-archive-box" link="/logs" />
 
         </x-menu>

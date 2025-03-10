@@ -5,6 +5,7 @@ namespace App\Exports;
 use App\Models\GeneratedCode;
 use App\Models\GeneratedFormalModel;
 use App\Models\GeneratedValidatedCode;
+use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
@@ -12,9 +13,9 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 class ValidatedCodesExport implements FromCollection, WithHeadings, WithMapping
 {
     /**
-    * @return \Illuminate\Support\Collection
+    * @return Collection
     */
-    public function collection(): \Illuminate\Support\Collection
+    public function collection(): Collection
     {
         return GeneratedValidatedCode::with(['generator' => function ($query) {
             if ($query->getModel() instanceof GeneratedCode) {
@@ -30,37 +31,40 @@ class ValidatedCodesExport implements FromCollection, WithHeadings, WithMapping
 
                 //parte da formal model
                 if ($item->generator instanceof GeneratedCode) {
-                    $item->user_input = $item->generator->formalModel->requirement;
-                    $item->formal_model = $item->generator->formalModel->generated_formal_model;
-                    $item->system_formal = $item->generator->formalModel->system_message;
-                    $item->formal_LLM = $item->generator->formalModel->llm_used;
-                    $item->formal_model_tool = $item->generator->formalModel->model_tool;
-                    $item->test_cases = $item->generator->formalModel->test_case;
+                    $formalModel = $item->generator->formalModel ?? null;
+                    $item->user_input = $formalModel->requirement ?? '';
+                    $item->formal_model = $formalModel->generated_formal_model ?? '';
+                    $item->system_formal = $formalModel->system_message ?? '';
+                    $item->formal_LLM = $formalModel->llm_used ?? '';
+                    $item->formal_model_tool = $formalModel->model_tool ?? '';
+                    $item->test_cases = $formalModel->test_case ?? '';
 
-                    $item->programming_language = $item->generator->programming_language->name;
-                    $item->first_code = $item->generator->generated_code;
-                    $item->code_LLM = $item->generator->llm_used;
-                    $item->system_code = $item->generator->system_message;
+                    $item->programming_language = $item->generator->programming_language ?? '';
+                    $item->first_code = $item->generator->generated_code ?? '';
+                    $item->code_LLM = $item->generator->llm_used ?? '';
+                    $item->system_code = $item->generator->system_message ?? '';
                 }
 
                 //parte da code gen
                 if ($item->generator instanceof GeneratedFormalModel) {
-                    $item->programming_language = $item->generator->generatedCode->programming_language->name;
-                    $item->user_input = $item->generator->generatedCode->requirement;
-                    $item->first_code = $item->generator->generatedCode->generated_code;
-                    $item->code_LLM = $item->generator->generatedCode->llm_used;
-                    $item->system_code = $item->generator->generatedCode->system_message;
+                    $generatedCode = $item->generator->generatedCode ?? null;
+                    $item->programming_language = $generatedCode->programming_language ?? '';
+                    $item->user_input = $generatedCode->requirement ?? '';
+                    $item->first_code = $generatedCode->generated_code ?? '';
+                    $item->code_LLM = $generatedCode->llm_used ?? '';
+                    $item->system_code = $generatedCode->system_message ?? '';
 
-                    $item->formal_model = $item->generator->generated_formal_model;
-                    $item->formal_LLM = $item->generator->llm_used;
-                    $item->formal_model_tool = $item->generator->model_tool;
-                    $item->test_cases = $item->generator->test_case;
-                    $item->system_formal = $item->generator->system_message;
+                    $item->formal_model = $item->generator->generated_formal_model ?? '';
+                    $item->formal_LLM = $item->generator->llm_used ?? '';
+                    $item->formal_model_tool = $item->generator->model_tool ?? '';
+                    $item->test_cases = $item->generator->test_case ?? '';
+                    $item->system_formal = $item->generator->system_message ?? '';
 
                 }
+
                 $item->generator_type = $item->generator_type === 'App\Models\GeneratedFormalModel' ? 'Code generation' : 'Formal Model generation';
-                $item->validation_process = json_encode($item->validation_process, JSON_PRETTY_PRINT);
-                $item->test_cases = json_encode($item->test_cases, JSON_PRETTY_PRINT);
+                $item->validation_process = json_encode($item->validation_process);
+                $item->test_cases = json_encode($item->test_cases);
                 return $item;
             });
     }

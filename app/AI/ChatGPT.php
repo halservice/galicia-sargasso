@@ -24,12 +24,13 @@ class ChatGPT
     /**
      * @throws ConnectionException
      */
-    public function send(array $message): string
+    public function send(array $message, string $model): string
     {
+
         try{
             $response = Http::withToken(config('services.openai.api_key'))
                 ->post("https://api.openai.com/v1/chat/completions", [
-                    'model' => "gpt-4o",
+                    'model' => $model,
                     'messages' => $message,
                 ])
                 ->json();

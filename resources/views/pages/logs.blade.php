@@ -36,7 +36,7 @@ new class extends \Livewire\Volt\Component {
                     $item->formal_model = $item->generator->formalModel->generated_formal_model;
                     $item->system_formal = $item->generator->formalModel->system_message;
                     $item->formal_LLM = $item->generator->formalModel->llm_used;
-                    $item->formal_model_tool = optional($item->generator->formalModel)->model_tool;
+                    $item->formal_model_tool = $item->generator->formalModel->model_tool;
                     $item->test_cases = $item->generator->formalModel->test_case;
 
                     $item->programming_language = $item->generator->programming_language->name;
@@ -109,7 +109,7 @@ new class extends \Livewire\Volt\Component {
 
 
 <x-card title="Logs"
-        subtitle="Here you can see your latest results and download all the data by all users." shadow separator>
+        subtitle="Here you can see and download your latest results." shadow separator>
 
     <x-form>
         <div class="overflow-x-auto shadow sm:rounded-lg">
@@ -149,9 +149,15 @@ new class extends \Livewire\Volt\Component {
         </div>
     </x-form>
 
-    <div class="mt-5">
-        <x-button class="btn-primary" wire:click="export">Export</x-button>
+    <div class="flex gap-2">
+        <div class="mt-5">
+            <x-button class="btn-primary" wire:click="export" disabled>Export</x-button>
+        </div>
+        @can('viewAdminContent', Auth::user())
+        <div class="mt-5">
+            <x-button class="btn-primary" wire:click="exportAll">Export All</x-button>
+        </div>
+        @endcan
     </div>
-
 
 </x-card>

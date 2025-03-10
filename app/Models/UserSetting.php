@@ -38,6 +38,8 @@ class UserSetting extends Model
 
     public function startFromGeneratedCode(): bool
     {
-        return $this->sequence === 'code-first';
+//        return $this->sequence === 'code-first';
+        return $this->sequence === 'Generate Source Code first and then Formal Model';
+
     }
 }
