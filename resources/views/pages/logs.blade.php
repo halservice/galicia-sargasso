@@ -1,6 +1,7 @@
 <?php
 
 use App\Exports\ValidatedCodesExport;
+use App\Exports\ValidatedCodesExportAll;
 use App\Models\GeneratedCode;
 use App\Models\GeneratedFormalModel;
 use App\Models\GeneratedValidatedCode;
@@ -79,6 +80,11 @@ new class extends \Livewire\Volt\Component {
         return Excel::download(new ValidatedCodesExport, 'validated-codes-' . now()->format('Y-m-d') . '.xlsx');
     }
 
+    public function exportAll()
+    {
+        return Excel::download(new ValidatedCodesExportAll, 'validated-codes-' . now()->format('Y-m-d') . '.xlsx');
+    }
+
 
     #[Computed]
     public function headers(): array
@@ -151,12 +157,12 @@ new class extends \Livewire\Volt\Component {
 
     <div class="flex gap-2">
         <div class="mt-5">
-            <x-button class="btn-primary" wire:click="export" disabled>Export</x-button>
+            <x-button class="btn-primary" wire:click="export">Export</x-button>
         </div>
         @can('viewAdminContent', Auth::user())
-        <div class="mt-5">
-            <x-button class="btn-primary" wire:click="exportAll">Export All</x-button>
-        </div>
+            <div class="mt-5">
+                <x-button class="btn-primary" wire:click="exportAll">Export All</x-button>
+            </div>
         @endcan
     </div>
 
