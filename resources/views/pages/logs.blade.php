@@ -35,7 +35,6 @@ new class extends \Livewire\Volt\Component {
                 if ($item->generator instanceof GeneratedCode) {
                     $item->user_input = $item->generator->formalModel->requirement;
                     $item->formal_model = $item->generator->formalModel->generated_formal_model;
-                    $item->system_formal = $item->generator->formalModel->system_message;
                     $item->formal_LLM = $item->generator->formalModel->llm_used;
                     $item->formal_model_tool = $item->generator->formalModel->model_tool;
                     $item->test_cases = $item->generator->formalModel->test_case;
@@ -43,7 +42,6 @@ new class extends \Livewire\Volt\Component {
                     $item->programming_language = $item->generator->programming_language->name;
                     $item->first_code = $item->generator->generated_code;
                     $item->code_LLM = $item->generator->llm_used;
-                    $item->system_code = $item->generator->system_message;
                 }
 
                 //parte da code gen
@@ -52,18 +50,15 @@ new class extends \Livewire\Volt\Component {
                     $item->user_input = $item->generator->generatedCode->requirement;
                     $item->first_code = $item->generator->generatedCode->generated_code;
                     $item->code_LLM = $item->generator->generatedCode->llm_used;
-                    $item->system_code = $item->generator->generatedCode->system_message;
 
                     $item->formal_model = $item->generator->generated_formal_model;
                     $item->formal_LLM = $item->generator->llm_used;
                     $item->formal_model_tool = $item->generator->model_tool;
                     $item->test_cases = $item->generator->test_case;
-                    $item->system_formal = $item->generator->system_message;
-
                 }
 
                 $item->generator_type = $item->generator_type === 'App\Models\GeneratedFormalModel' ? 'Code generation' : 'Formal Model generation';
-                $item->validation_process = json_encode($item->validation_process, JSON_PRETTY_PRINT);
+//                $item->validation_process = json_encode($item->validation_process, JSON_PRETTY_PRINT);
                 return $item;
             });
     }
@@ -93,16 +88,12 @@ new class extends \Livewire\Volt\Component {
             ['key' => 'generator_type', 'label' => 'Process start from'],
             ['key' => 'user_input', 'label' => 'User request'],
             ['key' => 'first_code', 'label' => 'First generated code'],
-            ['key' => 'system_code', 'label' => 'Code system message'],
             ['key' => 'programming_language', 'label' => 'Language'],
             ['key' => 'code_LLM', 'label' => 'LMM Code'],
             ['key' => 'formal_model', 'label' => 'Formal model'],
-            ['key' => 'system_formal', 'label' => 'Formal system message'],
             ['key' => 'formal_model_tool', 'label' => 'Model tool'],
             ['key' => 'formal_LLM', 'label' => 'LMM Formal'],
             ['key' => 'validated_code', 'label' => 'Final validated code'],
-            ['key' => 'system_message', 'label' => 'Validation system message'],
-            ['key' => 'validation_process', 'label' => 'Process'],
             ['key' => 'iteration', 'label' => 'Iteration'],
             ['key' => 'llm_used', 'label' => 'LLM Valid.'],
             ['key' => 'test_cases', 'label' => 'Generated test'],
@@ -141,8 +132,6 @@ new class extends \Livewire\Volt\Component {
                                 title="{{ is_string($value) ? $value : '' }}">
                                 @if (in_array($header['key'], ['first_code', 'formal_model', 'validated_code']))
                                     <code>{{ $formattedValue }}</code>
-                                @elseif ($header['key'] === 'validation_process')
-                                    <pre>{{ $formattedValue }}</pre>
                                 @else
                                     {{ $formattedValue }}
                                 @endif
