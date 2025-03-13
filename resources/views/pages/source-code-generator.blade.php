@@ -90,15 +90,21 @@ new class extends \Livewire\Volt\Component {
         // due comandi di sistemi differenti a seconda del metodo che uso
         if (!$this->startFromCode) {
             $systemMessage = "You are an expert programmer.
-            Generate clean and secure code based on user requirements and a formal model, using the following programming language {$this->settings->programming_language}.
-            You should only write the requested code or function, don't write a main and test cases.
-            You must provide the code within appropriate code blocks, with no explanations. Format your response using markdown.";
+            Generate clean, minimal, and secure code based on user requirements, using the following programming language: {$this->settings->programming_language}.
+            - The formal model is a guideline, but the code should be as simple and direct as possible.
+            - DO NOT introduce state variables, flags, or additional logic unless required.
+            - If a requirement can be implemented with a direct function, prefer that approach.
+            - You should only write the requested function(s), without a `main` function (unless necessary)  or test cases.
+            - You must provide the code within appropriate code blocks, with no explanations.
+            - Format your response using markdown.";
             $this->text = "Generate a code in {$this->settings->programming_language} for the following requirements: {$this->generatedFormal->requirement} and the following formal model:{$this->generatedFormal->generated_formal_model}";
         } else {
             $systemMessage = "You are an expert programmer.
             Generate clean and secure code based on user requirements, using the following programming language {$this->settings->programming_language}.
-            You should only write the requested code or function, don't write a main and test cases.
-            You must provide only the code within appropriate code blocks, with no explanation. Format your response using markdown.";
+            - If a requirement can be implemented with a direct function, prefer that approach.
+            - You should only write the requested function(s), without a `main` function (unless necessary)  or test cases.
+            - You must provide the code within appropriate code blocks, with no explanations.
+            - Format your response using markdown.";
             if (trim($this->text) === '') {
                 $this->result = "Error: the text field can't be empty.";
                 return;

@@ -14,6 +14,7 @@ use IcehouseVentures\LaravelChartjs\Builder;
 
 new class extends Component {
     use \App\Traits\checkChanges;
+    use \App\Traits\checkFailedTest;
 
     public int $currentYear = 0;
     public int $totalCount = 0;
@@ -43,8 +44,13 @@ new class extends Component {
             $iterationCount = count($assistantMessages);
 
             $assistantMessage = end($assistantMessages)['content'];
-            $lastIteration = $this->checkChanges($assistantMessage);
 
+            $numberChanges = $this->checkChanges($assistantMessage);
+            if($numberChanges != -1){
+                $lastIteration = $numberChanges;
+            } else {
+                $lastIteration = $this->checkFailedTest($assistantMessage);
+            }
             // per valutare percentuale di risultati non corretti alla fine del processo, se corretto modifico il num iterations per trovare ris corretto
             if ($lastIteration === 0){
                 $this->correctProcess[0]++;
@@ -198,12 +204,13 @@ new class extends Component {
                         ],
                     ],
                 ],
-            ]);    }
+            ]);
+    }
 
 }
 ?>
 
-<x-card title="Statistic"
+<x-card title="Statistics"
         subtitle="Here you can find key insights about the Galicia project."
         shadow
         separator>
@@ -217,10 +224,10 @@ new class extends Component {
               x-text="count"
               class="text-primary">
         </span>
-            <h1>&nbsp;projects in {{ $this->currentYear }}</h1>
+            <h1>&nbsp;test cases in {{ $this->currentYear }}</h1>
         </div>
     </div>
-    <p class="text-center">The following chart shows the number of projects conducted each month in {{ $this->currentYear }}.</p>
+    <p class="text-center">The following chart shows the number of tests conducted each month in {{ $this->currentYear }}.</p>
     <div class="w-3/4 mx-auto flex justify-center mb-6">
             <x-chartjs-component :chart="$this->monthlyChart" />
     </div>

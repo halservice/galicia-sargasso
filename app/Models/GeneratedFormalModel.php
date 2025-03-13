@@ -25,7 +25,7 @@ class GeneratedFormalModel extends Model
         'is_active' => 'boolean',
     ];
 
-    public static function log(?int $generatedCodeId, string $testCase, string $systemMessage, string $requirement, string $generatedFormalModel): static
+    public static function log(?int $generatedCodeId, string $systemMessage, string $requirement, string $generatedFormalModel): static
     {
         $setting = UserSetting::where('user_id',auth()->id())->first();
 
@@ -38,7 +38,6 @@ class GeneratedFormalModel extends Model
                 'generated_formal_model' => $generatedFormalModel,
                 'model_tool' => $setting->model_tool,
                 'llm_used' => $setting->llm_formal,
-                'test_case' => $testCase,
                 'is_active' => true,
             ]);
 

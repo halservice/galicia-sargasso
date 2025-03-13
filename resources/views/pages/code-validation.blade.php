@@ -1,7 +1,8 @@
 <?php
 
-use App\Actions\ResetGeneratorsAction;
 use App\Actions\CodeValidationAction;
+use App\Actions\ResetGeneratorsAction;
+use App\Actions\OldCodeValidationAction;
 use App\Models\GeneratedCode;
 use App\Models\GeneratedFormalModel;
 use App\Models\GeneratedValidatedCode;
@@ -65,12 +66,10 @@ new class extends \Livewire\Volt\Component {
             $this->lastValidation->is_active = false;
             $this->lastValidation->update();
         }
-
         $validated = app(CodeValidationAction::class)(
             $this->generatedCode,
             $this->generatedFormal
         );
-
         $this->result = $validated->validated_code;
 
         redirect()->route('code-validation');
@@ -88,7 +87,7 @@ new class extends \Livewire\Volt\Component {
 
 
 <x-card title="Code Validation"
-        subtitle="Automatically checks the generated code against the formal model and refines it based on the errors detected.">
+        subtitle="Automatically checks the generated code and refines it based on the errors detected.">
 
     @if($this->generatedCode?->is_active && $this->generatedFormal?->is_active && $this->lastValidation?->is_active)
         <x-form no-separator class="flex flex-col items-center justify-center">
@@ -131,7 +130,8 @@ new class extends \Livewire\Volt\Component {
     {{--        </div>--}}
     {{--    @endif--}}
     @if(isset($result))
-        <div class="rounded-[10px] p-[15px] gap-[5px] w-fit break-words mr-auto mb-5 bg-[#3864fc] text-white mt-5 max-w-4xl">
+        <div
+            class="rounded-[10px] p-[15px] gap-[5px] w-fit break-words mr-auto mb-5 bg-[#3864fc] text-white mt-5 max-w-4xl">
             <code>
                 <pre class="whitespace-pre-wrap">{{ $result }}</pre>
             </code>

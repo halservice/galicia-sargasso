@@ -22,7 +22,7 @@ class GeneratedValidatedCode extends Model
         'is_active' => 'boolean',
     ];
 
-    public static function log(Model $generator, string $testResult, array $validationProcess, string $systemMessage, string $generatedValidatedCode): self
+    public static function log(Model $generator, string $testCases, string $testResults, array $validationProcess, string $systemMessage, string $generatedValidatedCode): self
     {
         $setting = UserSetting::where('user_id',auth()->id())->first();
 
@@ -34,7 +34,8 @@ class GeneratedValidatedCode extends Model
                 'validated_code' => $generatedValidatedCode,
                 'iteration' => $setting->iteration,
                 'llm_used' => $setting->llm_validation,
-                'test_result' => $testResult,
+                'test_case' => $testCases,
+                'test_result' => $testResults,
                 'is_active' => true,
             ])
             ->generator()

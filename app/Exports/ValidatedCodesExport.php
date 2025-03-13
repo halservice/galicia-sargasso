@@ -37,8 +37,11 @@ class ValidatedCodesExport implements FromCollection, WithHeadings, WithMapping
                     $item->formal_model = $formalModel->generated_formal_model ?? '';
                     $item->formal_LLM = $formalModel->llm_used ?? '';
                     $item->formal_model_tool = $formalModel->model_tool ?? '';
-                    $item->test_cases = $formalModel->test_case ?? '';
-
+                    if($formalModel->test_case) {
+                        $item->test_cases = $formalModel->test_case ?? '';
+                    }else{
+                        $item->test_cases = $item->test_case ?? '';
+                    }
                     $item->programming_language = $item->generator->programming_language->value ?? '';
                     $item->first_code = $item->generator->generated_code ?? '';
                     $item->code_LLM = $item->generator->llm_used ?? '';
@@ -55,7 +58,11 @@ class ValidatedCodesExport implements FromCollection, WithHeadings, WithMapping
                     $item->formal_model = $item->generator->generated_formal_model ?? '';
                     $item->formal_LLM = $item->generator->llm_used ?? '';
                     $item->formal_model_tool = $item->generator->model_tool ?? '';
-                    $item->test_cases = $item->generator->test_case ?? '';
+                    if($item->generator->test_case) {
+                        $item->test_cases = $item->generator->test_case ?? '';
+                    }else{
+                        $item->test_cases = $item->test_case ?? '';
+                    }
                 }
 
                 $item->generator_type = $item->generator_type === 'App\Models\GeneratedFormalModel' ? 'Code generation' : 'Formal Model generation';

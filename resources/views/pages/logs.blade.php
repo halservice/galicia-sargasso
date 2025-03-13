@@ -37,8 +37,11 @@ new class extends \Livewire\Volt\Component {
                     $item->formal_model = $item->generator->formalModel->generated_formal_model;
                     $item->formal_LLM = $item->generator->formalModel->llm_used;
                     $item->formal_model_tool = $item->generator->formalModel->model_tool;
-                    $item->test_cases = $item->generator->formalModel->test_case;
-
+                    if($item->generator->formalModel->test_case) {
+                        $item->test_cases = $item->generator->formalModel->test_case;
+                    }else{
+                        $item->test_cases = $item->test_case;
+                    }
                     $item->programming_language = $item->generator->programming_language->name;
                     $item->first_code = $item->generator->generated_code;
                     $item->code_LLM = $item->generator->llm_used;
@@ -54,9 +57,12 @@ new class extends \Livewire\Volt\Component {
                     $item->formal_model = $item->generator->generated_formal_model;
                     $item->formal_LLM = $item->generator->llm_used;
                     $item->formal_model_tool = $item->generator->model_tool;
-                    $item->test_cases = $item->generator->test_case;
+                    if($item->generator->test_case) {
+                        $item->test_cases = $item->generator->test_case;
+                    }else{
+                        $item->test_cases = $item->test_case;
+                    }
                 }
-
                 $item->generator_type = $item->generator_type === 'App\Models\GeneratedFormalModel' ? 'Code generation' : 'Formal Model generation';
 //                $item->validation_process = json_encode($item->validation_process, JSON_PRETTY_PRINT);
                 return $item;
