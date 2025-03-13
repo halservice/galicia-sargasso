@@ -97,7 +97,7 @@ class CodeValidationAction
             if (!$flag && $i + 1 <= $iterations) {
                 $messages[] = [
                     'role' => 'user',
-                    'content' => "Here is the updated code after iteration $i: $currentCode. Please, validate the code again following the test cases $test_cases."
+                    'content' => "Here is the updated code after iteration $i: $currentCode. Please, validate the code again following the test cases $testCases."
                 ];
                 $message = [
                     [

@@ -100,6 +100,7 @@ class OldCodeValidationAction
 
         return GeneratedValidatedCode::log(
             $settings->startFromGeneratedCode() ? $formalModel : $code,
+            '',
             $checkTest,
             $messages,
             $systemMessage,
