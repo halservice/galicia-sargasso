@@ -16,6 +16,7 @@ use Livewire\Attributes\{Locked, Computed, Url, Validate};
 
 new class extends \Livewire\Volt\Component {
     use ExtractCodeTrait;
+    use \App\Traits\ExtractRequestInfo;
 
     #[Locked]
     public string $result;
@@ -29,6 +30,7 @@ new class extends \Livewire\Volt\Component {
     public ?GeneratedFormalModel $lastFormal = null;
     public ?GeneratedCode $generatedCode = null;
     protected ?UserSetting $settings = null;
+    public string $formal = '';
 //    protected ?CodeGeneratorSettings $settings = null;
 
     public bool $startFromCode = true;
@@ -43,7 +45,8 @@ new class extends \Livewire\Volt\Component {
 
         if ($this->lastFormal?->is_active) {
             $this->text = $this->lastFormal->requirement;
-            $this->result = $this->lastFormal->generated_formal_model;
+            $this->formal = $this->lastFormal->generated_formal_model;
+            $this->result = $this->formal;
         }
     }
 
@@ -95,11 +98,11 @@ new class extends \Livewire\Volt\Component {
         // due comandi di sistemi differenti a seconda del metodo che uso
         if ($this->startFromCode) {
             $system_message = "You are an expert in formal verification using $formalTool.
-            Generate a formal model based on the user-provided requirements and a given code.
+            Generate a formal model based on the user-provided requirements and a given program source code.
             **Rules:**
-            - The model must represent only the core logic of the requirement—DO NOT introduce unnecessary states, transitions, or conditions unless required.
+            - The model must represent only the core logic of the requirement—DO NOT introduce unnecessary constraints, states, transitions, or conditions unless required.
             - If the requirement is straightforward (e.g., printing a message), use the simplest representation without unnecessary states.
-            - DO NOT enforce additional control variables (e.g., state flags) unless required.
+            - DO NOT impose **any** value constraints (e.g., variable ranges like `0..255`) unless they are **explicitly** stated in the requirement. Use unconstrained types instead.              - DO NOT enforce additional control variables (e.g., state flags) unless required.
             - Output only the formal model in a correctly formatted code block, with the appropriate language specification.
             - No explanations or comments—only the formal model itself.";
             $this->text = "Generate a formal model in $formalTool for the following requirements: {$this->generatedCode->requirement} and the following code:{$this->generatedCode->generated_code}";
@@ -107,10 +110,18 @@ new class extends \Livewire\Volt\Component {
             $system_message = "You are an expert in formal verification using $formalTool.
             Generate a formal model based on the user-provided requirements.
             **Rules:**
-            - The model must represent only the core logic of the requirement—DO NOT introduce unnecessary states, transitions, or conditions unless required.
-            - DO NOT enforce additional control variables (e.g., state flags) unless required.
+            - The model must represent only the core logic of the requirement—DO NOT introduce unnecessary constraints, states, transitions, or conditions unless required.
+            - If the requirement is straightforward (e.g., printing a message), use the simplest representation without unnecessary states.
+            - DO NOT impose **any** value constraints (e.g., variable ranges like `0..255`) unless they are **explicitly** stated in the requirement. Use unconstrained types instead.              - DO NOT enforce additional control variables (e.g., state flags) unless required.
             - Output only the formal model in a correctly formatted code block, with the appropriate language specification.
-            - No explanations or comments—only the formal model itself.";
+            - No explanations or comments—only the formal model itself.
+
+            Handling unclear requests:
+            If the user request is ambiguous or lacks necessary details, do not generate a formal model. Instead, ask for clarification by specifying what additional information is needed.
+            Format your clarification request as follows:
+            You must always start with this: '**Requesting new info**:' then
+            - [List the missing details]
+            You must always end your request with '**Please add these specifications to your existing request.**'";
             if (trim($this->text) === '') {
                 $this->result = "Error: the text field can't be empty.";
                 return;
@@ -121,27 +132,10 @@ new class extends \Livewire\Volt\Component {
         $message = $coder->systemMessage($system_message, $this->text);
         $response = $coder->send($message, $model);
 
-        $code = $this->extractCodeFromResponse($response);
+        $this->formal = $this->extractCodeFromResponse($response);
 
-        if ($code != $response) {
-            $this->result = $code;
-
-//            if($this->startFromCode){
-//                $test_case_message = "Given a formal model {$this->result} and the code {$this->generatedCode->generated_code}, could you generate a few test cases that the code should execute if written correctly?";
-//            }else{
-//                $test_case_message = "Given a formal model {$this->result}, could you generate a few test cases that the code should execute if written correctly?";
-//            }
-//
-//            $message = [
-//                [
-//                    'role' => 'system',
-//                    'content' => $test_case_system,
-//                ], [
-//                    'role' => 'user',
-//                    'content' => $test_case_message
-//                ]
-//            ];
-//            $response = $coder->send($message, $model);
+        if ($this->formal != '') {
+            $this->result = "This is your requested formal model:\n\n" . $this->formal;
 
             GeneratedFormalModel::log(
                 $this->startFromCode ? $this->generatedCode->id : null,
@@ -151,7 +145,7 @@ new class extends \Livewire\Volt\Component {
             );
 
         } else {
-            $this->result = "Error in generating formal model.<br>Please try again or change the formal model.";
+            $this->result = $this->extractRequestNewInfo($response);
         }
     }
 
@@ -216,11 +210,17 @@ new class extends \Livewire\Volt\Component {
 
 
     @if(isset($result))
-        <div class="rounded-[10px] p-[15px] gap-[5px] w-fit break-words mr-auto mb-5 bg-[#3864fc] text-white mt-5 max-w-4xl">
-            <code>
-                <pre class="whitespace-pre-wrap">{{ $result }}</pre>
-            </code>
-        </div>
+        @if($formal != '')
+            <div class="rounded-[10px] p-[15px] gap-[5px] w-fit break-words mr-auto mb-5 bg-[#3864fc] text-white mt-5 max-w-4xl">
+                <code>
+                    <pre class="whitespace-pre-wrap">{{ $result }}</pre>
+                </code>
+            </div>
+        @else
+            <div class="rounded-[10px] p-[15px] gap-[5px] w-fit break-words mr-auto mb-5 bg-orange-400 text-white mt-5 max-w-4xl">
+                <p class="whitespace-pre-wrap">{!! Str::markdown($result) !!}</p>
+            </div>
+        @endif
     @endif
 
 </x-card>

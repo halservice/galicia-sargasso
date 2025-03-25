@@ -10,6 +10,6 @@ trait ExtractCodeTrait
             return trim($matches[1]);
         }
 
-        return trim($response);
+        return '';
     }
 }

@@ -14,6 +14,7 @@ use App\Models\GeneratedValidatedCode;
 
 new class extends \Livewire\Volt\Component {
     use ExtractCodeTrait;
+    use \App\Traits\ExtractRequestInfo;
 
     #[Validate('required|string')]
     public string $text = '';
@@ -29,6 +30,8 @@ new class extends \Livewire\Volt\Component {
 //    protected ?CodeGeneratorSettings $settings = null;
     public bool $startFromCode = true;
 
+    public string $code = '';
+
     protected ?GeneratedCode $lastCode = null;
 
 
@@ -41,7 +44,8 @@ new class extends \Livewire\Volt\Component {
         // Per gestione caricamento codice tipo chat
         if ($this->lastCode?->is_active === true) {
             $this->text = $this->lastCode->requirement;
-            $this->result = $this->lastCode->generated_code;
+            $this->code = $this->lastCode->generated_code;
+            $this->result = $this->code;
         }
     }
 
@@ -90,11 +94,11 @@ new class extends \Livewire\Volt\Component {
         // due comandi di sistemi differenti a seconda del metodo che uso
         if (!$this->startFromCode) {
             $systemMessage = "You are an expert programmer.
-            Generate clean, minimal, and secure code based on user requirements, using the following programming language: {$this->settings->programming_language}.
+            Generate clean and secure code based on user requirements and given formal model, using the following programming language: {$this->settings->programming_language}.
             - The formal model is a guideline, but the code should be as simple and direct as possible.
             - DO NOT introduce state variables, flags, or additional logic unless required.
             - If a requirement can be implemented with a direct function, prefer that approach.
-            - You should only write the requested function(s), without a `main` function (unless necessary)  or test cases.
+            - You should only write the requested function(s), without a `main` function (unless explicitly required in the prompt)  or test cases.
             - You must provide the code within appropriate code blocks, with no explanations.
             - Format your response using markdown.";
             $this->text = "Generate a code in {$this->settings->programming_language} for the following requirements: {$this->generatedFormal->requirement} and the following formal model:{$this->generatedFormal->generated_formal_model}";
@@ -102,9 +106,16 @@ new class extends \Livewire\Volt\Component {
             $systemMessage = "You are an expert programmer.
             Generate clean and secure code based on user requirements, using the following programming language {$this->settings->programming_language}.
             - If a requirement can be implemented with a direct function, prefer that approach.
-            - You should only write the requested function(s), without a `main` function (unless necessary)  or test cases.
+            - You should only write the requested function(s), without a `main` function (unless explicitly required in the prompt)  or test cases.
             - You must provide the code within appropriate code blocks, with no explanations.
-            - Format your response using markdown.";
+            - Format your response using markdown.
+
+            Handling unclear requests:
+            If the user request is ambiguous or lacks necessary details, do not generate code. Instead, ask for clarification by specifying what additional information is needed.
+            Format your clarification request as follows:
+            You must always start with this: '**Requesting new info**:' then
+            - [List the missing details]
+            You must always end your request with '**Please add these specifications to your existing request.**'";
             if (trim($this->text) === '') {
                 $this->result = "Error: the text field can't be empty.";
                 return;
@@ -115,11 +126,10 @@ new class extends \Livewire\Volt\Component {
         $message = $coder->systemMessage($systemMessage, $this->text);
         $response = $coder->send($message, $model);
 
-        $code = $this->extractCodeFromResponse($response);
-
-        // salvo solo se code!=respose, se è uguale è perché non ha trovato un codice.
-        if ($code !== $response) {
-            $this->result = $code;
+        $this->code = $this->extractCodeFromResponse($response);
+        // salvo solo se code!=response, se è uguale è perché non ha trovato un codice.
+        if ($this->code !== '') {
+            $this->result = "This is your requested code:\n\n" . $this->code;
 
             GeneratedCode::log(
                 $this->startFromCode ? null : $this->generatedFormal->id,
@@ -128,7 +138,7 @@ new class extends \Livewire\Volt\Component {
                 $this->result,
             );
         } else {
-            $this->result = "Error in generating the code.<br>Please try again.";
+            $this->result = $this->extractRequestNewInfo($response);
         }
 
     }
@@ -192,11 +202,17 @@ new class extends \Livewire\Volt\Component {
     @endif
 
     @if(isset($result))
-        <div class="rounded-[10px] p-[15px] gap-[5px] w-fit break-words mr-auto mb-5 bg-[#3864fc] text-white mt-5 max-w-4xl">
-            <code>
-                <pre class="whitespace-pre-wrap">{{ $result }}</pre>
-            </code>
-        </div>
+        @if($code != '')
+            <div class="rounded-[10px] p-[15px] gap-[5px] w-fit break-words mr-auto mb-5 bg-[#3864fc] text-white mt-5 max-w-4xl">
+                <code>
+                    <pre class="whitespace-pre-wrap">{{ $result }}</pre>
+                </code>
+            </div>
+        @else
+            <div class="rounded-[10px] p-[15px] gap-[5px] w-fit break-words mr-auto mb-5 bg-orange-400 text-white mt-5 max-w-4xl">
+                <p class="whitespace-pre-wrap">{!! Str::markdown($result) !!}</p>
+            </div>
+        @endif
     @endif
 
 </x-card>

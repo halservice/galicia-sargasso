@@ -50,11 +50,20 @@ new class extends \Livewire\Volt\Component {
             $this->iterations = collect($this->generatedValidation->validation_process)
                 ->where('role', 'assistant')
                 ->map(function ($entry, $index) use (&$iterationCount) {
-                    preg_match('/```(?:\w+)?\s*(.+?)```/s', $entry['content'], $validatedCodes);
+                    preg_match('/### Validated code:\s*```(?:\w+)?\s*(.+?)```/s', $entry['content'], $validatedCodes);
                     preg_match('/### Changes Made:\n(.*?)\n###/s', $entry['content'], $changes);
-                    preg_match('/### Test cases:\n(.*?)\n###/s', $entry['content'], $testResults);
+                    preg_match('/### Test cases:\n(.*?)\n###/s', $entry['content'], $testResults); //da modificare qui, perché se i test cases sono cosi mi da errore
+                    //TO DO
+//                    ### Test cases:
+//
+//
+//                    ### Test Case 1: Basic Ping Test
+//
+//                    - **Test Result:** Not applicable. The environment to execute this test using system commands like `ping` is not present.
+//
+//                    ### Test Case 2: Traceroute Test Failure
                     preg_match('/### Number of test failed:\s*(\d+)/', $entry['content'], $numFails);
-
+                    dd($entry);
                     $iterationCount++;
 
                     return [
