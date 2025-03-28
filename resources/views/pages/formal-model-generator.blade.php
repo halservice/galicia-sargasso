@@ -17,6 +17,7 @@ use Livewire\Attributes\{Locked, Computed, Url, Validate};
 new class extends \Livewire\Volt\Component {
     use ExtractCodeTrait;
     use \App\Traits\ExtractRequestInfo;
+    use \App\Traits\ExtractSamplePromptTrait;
 
     #[Locked]
     public string $result;
@@ -65,7 +66,7 @@ new class extends \Livewire\Volt\Component {
         }
     }
 
-    public function send(): void
+    public function send($checkPrompt = false): void
     {
 
         // se parto dalla generazione del codice, ogni volta che creo un nuovo modello is_active si
@@ -98,34 +99,59 @@ new class extends \Livewire\Volt\Component {
         // due comandi di sistemi differenti a seconda del metodo che uso
         if ($this->startFromCode) {
             $system_message = "You are an expert in formal verification using $formalTool.
-            Generate a formal model based on the user-provided requirements and a given program source code.
+            Generate a formal model based on the user-provided requirements and a given program source codes. You must always generate a formal model in $formalTool even if the user requested a code. You do not generate code.
             **Rules:**
             - The model must represent only the core logic of the requirement—DO NOT introduce unnecessary constraints, states, transitions, or conditions unless required.
             - If the requirement is straightforward (e.g., printing a message), use the simplest representation without unnecessary states.
-            - DO NOT impose **any** value constraints (e.g., variable ranges like `0..255`) unless they are **explicitly** stated in the requirement. Use unconstrained types instead.              - DO NOT enforce additional control variables (e.g., state flags) unless required.
+            - DO NOT impose **any** value constraints (e.g., variable ranges like `0..255`) unless they are **explicitly** stated in the requirement. Use unconstrained types instead.
+            - DO NOT enforce additional control variables (e.g., state flags) unless required.
             - Output only the formal model in a correctly formatted code block, with the appropriate language specification.
             - No explanations or comments—only the formal model itself.";
             $this->text = "Generate a formal model in $formalTool for the following requirements: {$this->generatedCode->requirement} and the following code:{$this->generatedCode->generated_code}";
-        } else {
+        } elseif ($checkPrompt===true) {
             $system_message = "You are an expert in formal verification using $formalTool.
-            Generate a formal model based on the user-provided requirements.
+            Generate a *formal model* based on the user-provided requirements. You must always generate a formal model in $formalTool even if the user requested a code. You do not generate code.
             **Rules:**
             - The model must represent only the core logic of the requirement—DO NOT introduce unnecessary constraints, states, transitions, or conditions unless required.
             - If the requirement is straightforward (e.g., printing a message), use the simplest representation without unnecessary states.
-            - DO NOT impose **any** value constraints (e.g., variable ranges like `0..255`) unless they are **explicitly** stated in the requirement. Use unconstrained types instead.              - DO NOT enforce additional control variables (e.g., state flags) unless required.
+            - DO NOT impose **any** value constraints (e.g., variable ranges like `0..255`) unless they are **explicitly** stated in the requirement. Use unconstrained types instead.
+            - DO NOT enforce additional control variables (e.g., state flags) unless required.
             - Output only the formal model in a correctly formatted code block, with the appropriate language specification.
             - No explanations or comments—only the formal model itself.
 
             Handling unclear requests:
             If the user request is ambiguous or lacks necessary details, do not generate a formal model. Instead, ask for clarification by specifying what additional information is needed.
+            When asking for clarification:
+            - Use the same language as the user request
+            - Focus on practical aspects needed to implement the functionality
+            - Avoid technical questions unless necessary. Keep your questions simple and relevant to the core functionality.
+            - Your clarification requests should be based on general knowledge and should not assume the user has programming expertise.
+            - Do not ask for details that can reasonably be assumed.
             Format your clarification request as follows:
-            You must always start with this: '**Requesting new info**:' then
+            - Always start with '**Requesting new info**:'
             - [List the missing details]
-            You must always end your request with '**Please add these specifications to your existing request.**'";
-            if (trim($this->text) === '') {
-                $this->result = "Error: the text field can't be empty.";
-                return;
-            }
+            - Always end with '**Please, use the new revised prompt and modify it.**'
+            If clarification is needed, provide a sample revised prompt for the user to follow. Format it as follows:
+            - Start with 'Start sample prompt'
+            - Include a modified prompt of the user request that incorporates all the missing details. Make sure to NOT modify the data already given by the user. If the user has to add something use [] to encapsulate the placeholders.
+            - End with 'End sample prompt'
+            This way, the user can easily adjust their request based on your suggestions.";
+
+        }else{
+            $system_message = "You are an expert in formal verification using $formalTool.
+            Generate a *formal model* based on the user-provided requirements. You must always generate a formal model in $formalTool even if the user requested a code. You do not generate codes.
+            **Rules:**
+            - The model must represent only the core logic of the requirement—DO NOT introduce unnecessary constraints, states, transitions, or conditions unless required.
+            - If the requirement is straightforward (e.g., printing a message), use the simplest representation without unnecessary states.
+            - DO NOT impose **any** value constraints (e.g., variable ranges like `0..255`) unless they are **explicitly** stated in the requirement. Use unconstrained types instead.
+            - DO NOT enforce additional control variables (e.g., state flags) unless required.
+            - Output only the formal model in a correctly formatted code block, with the appropriate language specification.
+            - No explanations or comments—only the formal model itself.
+            - The output must always be in the syntax of $formalTool.";
+        }
+        if (trim($this->text) === '') {
+            $this->result = "Error: the text field can't be empty.";
+            return;
         }
 
         $model = \Auth::user()->settings->llm_formal;
@@ -146,6 +172,10 @@ new class extends \Livewire\Volt\Component {
 
         } else {
             $this->result = $this->extractRequestNewInfo($response);
+            $samplePrompt = $this->extractSamplePrompt($response);
+            if($samplePrompt != ''){
+                $this->text=$samplePrompt;
+            }
         }
     }
 
@@ -190,16 +220,23 @@ new class extends \Livewire\Volt\Component {
                 wire:model="text"
                 placeholder="Type your natural language input here..."
                 rows="4"
-                wire:keydown.enter="send"
+                wire:keydown.enter="send(true)"
                 inline
             />
             <x-slot:actions>
                 <x-button class="btn-primary" type="submit" wire:loading.attr="disabled"
-                          wire:keydown.ctrl.enter="send">
-                    <span wire:loading.remove wire:target="send">Send</span>
-                    <span wire:loading wire:target="send" class="flex items-center">
+                          wire:click="send(false)">
+                    <span wire:loading.remove wire:target="send(false)">Send</span>
+                    <span wire:loading wire:target="send(false)" class="flex items-center">
                  <x-icon name="o-arrow-path" class="animate-spin mr-2"/>
                  Sending...
+                </span>
+                </x-button>
+                <x-button class="btn-primary" type="button" wire:loading.attr="disabled" wire:click="send(true)">
+                    <span wire:loading.remove wire:target="send(true)">Check prompt & send</span>
+                    <span wire:loading wire:target="send(true)" class="flex items-center">
+                 <x-icon name="o-arrow-path" class="animate-spin mr-2"/>
+                 Checking prompt...
                 </span>
                 </x-button>
                 <x-button label="Reset" class="btn-secondary" wire:loading.attr="disabled"

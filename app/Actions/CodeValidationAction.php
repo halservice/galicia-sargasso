@@ -100,6 +100,7 @@ class CodeValidationAction
                 'role' => 'assistant',
                 'content' => $response,
             ];
+
             $flag = $this->checkFailed($response);
             $currentCode = $this->extractValidatedCodeFromResponse($response);
             if (!$flag && $i + 1 <= $iterations) {

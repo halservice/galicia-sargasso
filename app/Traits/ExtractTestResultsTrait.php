@@ -6,7 +6,7 @@ trait ExtractTestResultsTrait
 {
     public function extractTestResult(string $response): string
     {
-        if (preg_match('/### Test cases:\s*(.*?)\s*(?=###|\z)/s', $response, $matches)) {
+        if (preg_match('/### Test cases:\s*(.*?)\s*(?=### Number of|\z)/s', $response, $matches)) {
             return trim($matches[1]);
         }
 

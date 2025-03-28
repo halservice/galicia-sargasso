@@ -15,6 +15,7 @@ use App\Models\GeneratedValidatedCode;
 new class extends \Livewire\Volt\Component {
     use ExtractCodeTrait;
     use \App\Traits\ExtractRequestInfo;
+    use \App\Traits\ExtractSamplePromptTrait;
 
     #[Validate('required|string')]
     public string $text = '';
@@ -66,14 +67,14 @@ new class extends \Livewire\Volt\Component {
 
     }
 
-    public function send(): void
+    public function send($checkPrompt = false): void
     {
         // se parto dalla generazione del modello formale, ogni volta che creo un nuovo codice is_active si
         // disattiva solo su codice e validazione. mantengo ciò che ho prima ma posso modificare quello dopo.
         if (!$this->startFromCode) {
             if ($this->lastCode) {
                 $this->lastCode->is_active = false;
-                $this->$lastCode->update();
+                $this->lastCode->update();
             }
             $lastValidation = GeneratedValidatedCode::where('user_id', auth()->id())
                 ->latest()
@@ -102,7 +103,7 @@ new class extends \Livewire\Volt\Component {
             - You must provide the code within appropriate code blocks, with no explanations.
             - Format your response using markdown.";
             $this->text = "Generate a code in {$this->settings->programming_language} for the following requirements: {$this->generatedFormal->requirement} and the following formal model:{$this->generatedFormal->generated_formal_model}";
-        } else {
+        } elseif ($checkPrompt === true) {
             $systemMessage = "You are an expert programmer.
             Generate clean and secure code based on user requirements, using the following programming language {$this->settings->programming_language}.
             - If a requirement can be implemented with a direct function, prefer that approach.
@@ -111,21 +112,38 @@ new class extends \Livewire\Volt\Component {
             - Format your response using markdown.
 
             Handling unclear requests:
-            If the user request is ambiguous or lacks necessary details, do not generate code. Instead, ask for clarification by specifying what additional information is needed.
+            If the user request is ambiguous or lacks necessary details, DO NOT generate ANY code section. Instead, ask for clarification by specifying what additional information is needed.
+            When asking for clarification:
+            - Use the same language as the user request.
+            - Focus on practical aspects needed to implement the functionality
+            - Avoid technical questions unless necessary. Keep your questions simple and relevant to the core functionality.
+            - Your clarification requests should be based on general knowledge and should not assume the user has programming expertise.
+            - Do not ask for details that can reasonably be assumed.
             Format your clarification request as follows:
-            You must always start with this: '**Requesting new info**:' then
+            - Always start with '**Requesting new info**:'
             - [List the missing details]
-            You must always end your request with '**Please add these specifications to your existing request.**'";
-            if (trim($this->text) === '') {
-                $this->result = "Error: the text field can't be empty.";
-                return;
-            }
+            - Always end with '**Please, use the new revised prompt and modify it.**'
+            If clarification is needed, provide a sample revised prompt for the user to follow. Format it as follows:
+            - Start with 'Start sample prompt'
+            - Include a modified prompt of the user request that incorporates all the missing details. Make sure to NOT modify the data already given by the user. If the user has to add something use [] to encapsulate the placeholders.
+            - End with 'End sample prompt'
+            This way, the user can easily adjust their request based on your suggestions.";
+        } else {
+            $systemMessage = "You are an expert programmer.
+            Generate clean and secure code based on user requirements, using the following programming language {$this->settings->programming_language}.
+            - If a requirement can be implemented with a direct function, prefer that approach.
+            - You should only write the requested function(s), without a `main` function (unless explicitly required in the prompt)  or test cases.
+            - You must provide the code within appropriate code blocks, with no explanations.
+            - Format your response using markdown.";
+        }
+        if (trim($this->text) === '') {
+            $this->result = "Error: the text field can't be empty.";
+            return;
         }
 
         $model = \Auth::user()->settings->llm_code;
         $message = $coder->systemMessage($systemMessage, $this->text);
         $response = $coder->send($message, $model);
-
         $this->code = $this->extractCodeFromResponse($response);
         // salvo solo se code!=response, se è uguale è perché non ha trovato un codice.
         if ($this->code !== '') {
@@ -139,8 +157,12 @@ new class extends \Livewire\Volt\Component {
             );
         } else {
             $this->result = $this->extractRequestNewInfo($response);
-        }
+            $samplePrompt = $this->extractSamplePrompt($response);
+            if ($samplePrompt != '') {
+                $this->text = $samplePrompt;
 
+            }
+        }
     }
 
     public function clear(): void
@@ -152,7 +174,8 @@ new class extends \Livewire\Volt\Component {
 ?>
 
 <x-card title="Source Code Generator"
-        subtitle="Input functional requirements in natural language through a user-friendly interface.">
+        subtitle="Input functional requirements in natural language through a user-friendly interface."
+    >
 
     @if(! $this->startFromCode)
         <x-form wire:submit="send" no-separator class="flex flex-col items-center justify-center">
@@ -163,7 +186,7 @@ new class extends \Livewire\Volt\Component {
                         <x-button
                             class="btn-secondary"
                             type="submit" wire:loading.attr="disabled"
-                            wire:keydown.ctrl.enter="send">
+                            >
                             <span wire:loading.remove wire:target="send">Generate the code</span>
                             <span wire:loading wire:target="send" class="flex items-center">
                          <x-icon name="o-arrow-path" class="animate-spin mr-2"/>
@@ -183,16 +206,24 @@ new class extends \Livewire\Volt\Component {
                 wire:model="text"
                 placeholder="Type your natural language input here..."
                 rows="4"
-                wire:keydown.enter="send"
+                wire:keydown.enter="send(true)"
                 inline
             />
             <x-slot:actions>
-                <x-button class="btn-primary" type="submit" wire:loading.attr="disabled"
-                          wire:keydown.ctrl.enter="send">
-                    <span wire:loading.remove wire:target="send">Send</span>
-                    <span wire:loading wire:target="send" class="flex items-center">
+                <x-button class="btn-primary" type="button" wire:loading.attr="disabled"
+{{--                          wire:keydown.ctrl.enter="send" --}}
+                          wire:click="send(false)">
+                    <span wire:loading.remove wire:target="send(false)">Send</span>
+                    <span wire:loading wire:target="send(false)" class="flex items-center">
                  <x-icon name="o-arrow-path" class="animate-spin mr-2"/>
                  Sending...
+                </span>
+                </x-button>
+                <x-button class="btn-primary" type="button" wire:loading.attr="disabled" wire:click="send(true)">
+                    <span wire:loading.remove wire:target="send(true)">Check prompt & send</span>
+                    <span wire:loading wire:target="send(true)" class="flex items-center">
+                 <x-icon name="o-arrow-path" class="animate-spin mr-2"/>
+                 Checking prompt...
                 </span>
                 </x-button>
                 <x-button label="Reset" class="btn-secondary" wire:loading.attr="disabled"
