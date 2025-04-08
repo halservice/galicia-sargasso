@@ -15,6 +15,11 @@ return new class extends Migration
             $table->foreign('generated_formal_model_id')->references('id')->on('generated_formal_models')->cascadeOnDelete();
         });
 
+        Schema::table('generated_codes', function (Blueprint $table) {
+            $table->dropForeign(['user_id']);
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+        });
+
         Schema::table('generated_formal_models', function (Blueprint $table) {
             $table->foreign('generated_code_id')->references('id')->on('generated_codes')->cascadeOnDelete();
         });

@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
 use Illuminate\Auth\Events\PasswordReset;
 
+// @phpstan-ignore-next-line
 new class extends \Livewire\Volt\Component {
     #[Validate('required|email')]
     public string $email = '';

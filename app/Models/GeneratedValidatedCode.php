@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
+
 class GeneratedValidatedCode extends Model
 {
     /** @use HasFactory<GeneratedValidatedCode> */
@@ -43,12 +44,17 @@ class GeneratedValidatedCode extends Model
             ->save();
     }
 
-
+    /**
+     * @return MorphTo<GeneratedCode|GeneratedFormalModel>
+     */
     public function generator(): MorphTo
     {
         return $this->morphTo();
     }
 
+    /**
+     * @return BelongsTo<User>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');

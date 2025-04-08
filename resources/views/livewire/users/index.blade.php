@@ -5,6 +5,7 @@ use Illuminate\Support\Collection;
 use Livewire\Volt\Component;
 use Mary\Traits\Toast;
 
+// @phpstan-ignore-next-line
 new class extends Component {
     use Toast;
 

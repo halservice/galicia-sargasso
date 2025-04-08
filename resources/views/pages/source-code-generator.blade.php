@@ -12,6 +12,7 @@ use Carbon\Carbon;
 use Livewire\Attributes\{Locked, Computed, Url, Validate};
 use App\Models\GeneratedValidatedCode;
 
+// @phpstan-ignore-next-line
 new class extends \Livewire\Volt\Component {
     use ExtractCodeTrait;
     use \App\Traits\ExtractRequestInfo;
@@ -141,10 +142,12 @@ new class extends \Livewire\Volt\Component {
             return;
         }
 
-        $model = \Auth::user()->settings->llm_code;
+        $model = auth()->user()->settings->llm_code;
+//        $model = \Auth::user()->settings->llm_code;
         $message = $coder->systemMessage($systemMessage, $this->text);
         $response = $coder->send($message, $model);
         $this->code = $this->extractCodeFromResponse($response);
+
         // salvo solo se code!=response, se è uguale è perché non ha trovato un codice.
         if ($this->code !== '') {
             $this->result = "This is your requested code:\n\n" . $this->code;

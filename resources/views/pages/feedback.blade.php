@@ -8,6 +8,7 @@ use App\Models\GeneratedValidatedCode;
 use App\Models\UserSetting;
 use Livewire\Attributes\Computed;
 
+// @phpstan-ignore-next-line
 new class extends \Livewire\Volt\Component {
 
     public array $iterations = [];

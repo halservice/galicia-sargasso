@@ -7,6 +7,7 @@ use App\Enums\ProgrammingLanguage;
 use App\Enums\Sequence;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class UserSetting extends Model
 {
@@ -31,7 +32,10 @@ class UserSetting extends Model
         'sequence',
     ];
 
-    public function user()
+    /**
+     * @return BelongsTo<User>
+     */
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }

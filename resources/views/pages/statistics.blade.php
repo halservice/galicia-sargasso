@@ -12,6 +12,7 @@ use Livewire\Volt\Component;
 use IcehouseVentures\LaravelChartjs\Facades\Chartjs;
 use IcehouseVentures\LaravelChartjs\Builder;
 
+// @phpstan-ignore-next-line
 new class extends Component {
     use \App\Traits\checkChanges;
     use \App\Traits\checkFailedTest;
@@ -28,12 +29,11 @@ new class extends Component {
     {
         $this->currentYear = now()->year;
 
-        $this->totalCount = GeneratedValidatedCode::select('id','created_at')
-            ->whereYear('created_at', $this->currentYear)
-            ->get()
+        $this->totalCount = GeneratedValidatedCode::whereYear('created_at', $this->currentYear)
             ->count();
 
-        $process = GeneratedValidatedCode::select('validation_process')
+        $process = GeneratedValidatedCode::whereYear('created_at', $this->currentYear)
+            ->select('validation_process')
             ->latest()
             ->get();
 
@@ -143,11 +143,16 @@ new class extends Component {
         }])
             ->get()
             ->map(function ($item) {
-                if ($item->generator instanceof GeneratedFormalModel) {
-                    $item->programming_language = $item->generator->generatedCode->programming_language->value;
-                } else {
-                    $item->programming_language = $item->generator->programming_language->value;
+                if ($item->generator instanceof GeneratedFormalModel && $item->generator->generatedCode) {
+                    $item->programming_language = $item->generator->generatedCode->programming_language->value ?? null;
+                } elseif ($item->generator instanceof GeneratedCode) {
+                    $item->programming_language = $item->generator->programming_language->value ?? null;
                 }
+//                if ($item->generator instanceof GeneratedFormalModel) {
+//                    $item->programming_language = $item->generator->generatedCode->programming_language->value;
+//                } else {
+//                    $item->programming_language = $item->generator->programming_language->value;
+//                }
                 return $item;
             });
         $programmingLanguages = $data->pluck('programming_language')->toArray();

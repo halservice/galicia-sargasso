@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
 use Livewire\Attributes\Validate;
 
+// @phpstan-ignore-next-line
 new class extends \Livewire\Volt\Component {
     #[Validate('required|email')]
     public string $email = "";

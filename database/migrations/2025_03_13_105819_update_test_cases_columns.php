@@ -18,6 +18,7 @@ return new class extends Migration
         Schema::table('generated_validated_codes', function (Blueprint $table) {
             $table->text('test_case')->nullable();
         });
+
     }
 
     /**

@@ -13,6 +13,7 @@ use App\Traits\checkFailedTest;
 use App\Traits\ExtractTestResultsTrait;
 use App\Traits\ExtractValidatedCodeTrait;
 use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Support\Facades\Auth;
 
 class CodeValidationAction
 {
@@ -22,7 +23,7 @@ class CodeValidationAction
 
     public function __construct(
 //        private readonly CodeGeneratorSettings $settings,
-        private readonly ?UserSetting $settings,
+//        private readonly ?UserSetting $settings,
 
 //        private readonly ResetGeneratorsAction $resetGeneratorsAction,
     )
@@ -37,7 +38,8 @@ class CodeValidationAction
     {
         $settings = UserSetting::where('user_id', auth()->id())->first();
         $iterations = $settings->iteration;
-        $model = \Auth::user()->settings->llm_validation;
+//        $model = \Auth::user()->settings->llm_validation;
+        $model = Auth::user()->settings->llm_validation;
         $coder = match ($settings->llm_code) {
             LLM::Llama->value => new LLama(),
             default => new ChatGPT()
@@ -83,9 +85,9 @@ class CodeValidationAction
         **Output format:**
         1. '### Test cases:' A brief explanation of each test result, specifying whether it passed or failed **on the original code**. If a test case is discarded, explain why. Leave an empty line after every test.
         2. '### Number of test failed:' An integer indicating how many test cases **failed in the original code** (0 if all tests passed without modifications).
-        3. '### Validated code:' The refined code after resolving any failed tests, or the original code if all tests passed immediately.
+        3. '### Validated code:' The refined code after resolving any failed tests, or the original code if all tests passed immediately. You must provide the code within appropriate code blocks and with the programming language {$code->programming_language->value}.
         4. '### Changes Made:' Listing any fixes or improvements in the code (or stating 'No changes needed.').";
-        $userMessage = "Validate this code:\n {$code->generated_code}.\nFollowing the test cases:\n {$testCases}";
+        $userMessage = "Verify this code:\n {$code->generated_code}.\nFollowing the test cases:\n {$testCases}";
 
         $currentCode = $code->generated_code;
         $message = $coder->systemMessage($systemMessage, $userMessage);
@@ -106,7 +108,7 @@ class CodeValidationAction
             if (!$flag && $i + 1 <= $iterations) {
                 $messages[] = [
                     'role' => 'user',
-                    'content' => "This is iteration $i. Validate this code:$currentCode following the test cases $testCases."
+                    'content' => "This is iteration $i. Verify this code:\n$currentCode.\nFollowing the test cases:\n$testCases."
                 ];
                 $message = [
                     [
@@ -150,14 +152,6 @@ class CodeValidationAction
 
     protected function checkFailed(string $response): bool
     {
-//        if (preg_match('/Number of changes made:\s*(\d+)/i', $response, $matches)) {
-//            $number = (int)trim($matches[1]);
-//            if ($number === 0) {
-//                return true;
-//            }
-//        }
-//
-//        return false;
 
         $number = $this->checkFailedTest($response);
         if($number === 0){

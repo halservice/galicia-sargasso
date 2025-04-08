@@ -14,6 +14,7 @@ use App\Traits\ExtractCodeTrait;
 use Carbon\Carbon;
 use Livewire\Attributes\{Locked, Computed, Url, Validate};
 
+// @phpstan-ignore-next-line
 new class extends \Livewire\Volt\Component {
     use ExtractCodeTrait;
     use \App\Traits\ExtractRequestInfo;
@@ -154,7 +155,7 @@ new class extends \Livewire\Volt\Component {
             return;
         }
 
-        $model = \Auth::user()->settings->llm_formal;
+        $model = auth()->user()->settings->llm_formal;
         $message = $coder->systemMessage($system_message, $this->text);
         $response = $coder->send($message, $model);
 

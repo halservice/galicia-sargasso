@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Livewire\Attributes\Validate;
 
+// @phpstan-ignore-next-line
 new class extends \Livewire\Volt\Component {
     #[Validate('required|string|email')]
     public string $email = "";

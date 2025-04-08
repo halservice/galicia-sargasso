@@ -70,6 +70,7 @@ class ValidatedCodesExportAll implements FromCollection, WithHeadings, WithMappi
                 }
 
                 $item->generator_type = $item->generator_type === 'App\Models\GeneratedFormalModel' ? 'Code generation' : 'Formal Model generation';
+                dd($item->validation_process);
                 $item->validation_process = json_encode($item->validation_process);
                 $item->test_cases = json_encode($item->test_cases);
                 return $item;

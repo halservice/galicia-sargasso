@@ -13,6 +13,7 @@ use App\Traits\ExtractCodeTrait;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
 
+// @phpstan-ignore-next-line
 new class extends \Livewire\Volt\Component {
     use ExtractCodeTrait;
 

@@ -52,6 +52,9 @@ class GeneratedCode extends Model
         return $this->belongsTo(GeneratedFormalModel::class, 'generated_formal_model_id');
     }
 
+    /**
+     * @return BelongsTo<User>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');

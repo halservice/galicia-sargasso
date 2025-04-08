@@ -11,6 +11,7 @@ use Livewire\Attributes\Computed;
 use Livewire\WithPagination;
 use Maatwebsite\Excel\Facades\Excel;
 
+// @phpstan-ignore-next-line
 new class extends \Livewire\Volt\Component {
     use withPagination;
 
