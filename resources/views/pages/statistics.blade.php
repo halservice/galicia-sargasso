@@ -25,7 +25,7 @@ new class extends Component {
     public array $iterationsCount = [1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0];
     public array $correctProcess = [0 => 0, 1 => 0];
 
-    public function mount()
+    public function mount(): void
     {
         $this->currentYear = now()->year;
 
