@@ -162,7 +162,7 @@ new class extends \Livewire\Volt\Component {
         $this->formal = $this->extractCodeFromResponse($response);
 
         if ($this->formal != '') {
-            $this->result = "This is your requested formal model:\n\n" . $this->formal;
+            $this->result = $this->formal;
 
             GeneratedFormalModel::log(
                 $this->startFromCode ? $this->generatedCode->id : null,

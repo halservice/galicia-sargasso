@@ -9,15 +9,15 @@ Volt::route('/','home')
     ->name('home')
     ->middleware('auth');
 
-Volt::route('/source-code-generator/', 'source-code-generator')
+Volt::route('/source-code-generator', 'source-code-generator')
     ->name('source-code-generator')
     ->middleware('auth');
 
-Volt::route('/formal-model-generator/', 'formal-model-generator')
+Volt::route('/formal-model-generator', 'formal-model-generator')
     ->name('formal-model-generator')
     ->middleware('auth');
 
-Volt::route('/code-validation/', 'code-validation')
+Volt::route('/code-validation', 'code-validation')
     ->name('code-validation')
     ->middleware('auth');
 
@@ -33,9 +33,9 @@ Volt::route('/logs', 'logs')
     ->name('logs')
     ->middleware('auth');
 
-//Volt::route('/statistics', 'statistics')
-//    ->name('statistics')
-//    ->middleware('auth');
+Volt::route('/statistics', 'statistics')
+    ->name('statistics')
+    ->middleware('auth');
 
 Volt::route('/login', 'auth.login')
     ->name('login')
@@ -54,12 +54,12 @@ Volt::route('/reset-password/{token}', 'auth.reset-password')
     ->name('password.reset')
     ->middleware('guest');
 
-Route::get('/logout', function (){
+Route::post('/logout', function (){
     auth()->logout();
     request()->session()->invalidate();
     request()->session()->regenerateToken();
 
     return redirect('/login');
-    });
+    })->name('logout');
 
 

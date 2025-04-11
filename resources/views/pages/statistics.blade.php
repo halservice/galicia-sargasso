@@ -16,11 +16,15 @@ use IcehouseVentures\LaravelChartjs\Builder;
 new class extends Component {
     use \App\Traits\checkChanges;
     use \App\Traits\checkFailedTest;
+    use \App\Traits\codeGotBetterTrait;
 
     public int $currentYear = 0;
     public int $totalCount = 0;
     public float $mean = 0;
     public int $failedProcess = 0;
+
+    public int $betterCode = 0;
+    public int $rightAtFirst = 0;
 
     public array $iterationsCount = [1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0];
     public array $correctProcess = [0 => 0, 1 => 0];
@@ -55,12 +59,22 @@ new class extends Component {
             if ($lastIteration === 0){
                 $this->correctProcess[0]++;
                 $this->iterationsCount[$iterationCount]++;
-            }else{
+            }elseif ($lastIteration != -1){
                 $this->correctProcess[1]++;
+            }
+
+            // Per valutare # corretto iniziale + miglioramenti (inizio sbagliato - fine corretto)
+            $result = $this->gotABetterCode($assistantMessages);
+            if($result === 1 ){
+                    $this->betterCode++;
+            } elseif ($result === 0 ){
+                $this->rightAtFirst++;
             }
         }
 
-        $this->failedProcess = ($this->correctProcess[1]/$this->totalCount)*100;
+        $this->failedProcess = $this->totalCount > 0
+            ? round(($this->correctProcess[1] / $this->totalCount) * 100, 2)
+            : 0;
 
         $totalTest = 0;
         $total = 0;
@@ -68,7 +82,10 @@ new class extends Component {
             $total += $iteration * $iterationNumber;
             $totalTest += $iterationNumber;
         }
-        $this->mean = round($total / $totalTest,2);
+        $this->mean = $totalTest > 0 ? round($total / $totalTest, 2) : 0;
+
+
+
 
     }
 
@@ -144,9 +161,10 @@ new class extends Component {
             ->get()
             ->map(function ($item) {
                 if ($item->generator instanceof GeneratedFormalModel && $item->generator->generatedCode) {
-                    $item->programming_language = $item->generator->generatedCode->programming_language->value ?? null;
-                } elseif ($item->generator instanceof GeneratedCode) {
-                    $item->programming_language = $item->generator->programming_language->value ?? null;
+                    $item->programming_language = $item->generator->generatedCode->programming_language->name ?? null;
+//                } elseif ($item->generator instanceof GeneratedCode) {
+                } else {
+                    $item->programming_language = $item->generator->programming_language->name ?? null;
                 }
 //                if ($item->generator instanceof GeneratedFormalModel) {
 //                    $item->programming_language = $item->generator->generatedCode->programming_language->value;
@@ -193,6 +211,7 @@ new class extends Component {
             ->labels($labels)
             ->datasets([
                 [
+                    "label" => "Distribution of projects over iterations",
                     'data' => $data,
                 ]
             ])
@@ -255,10 +274,12 @@ new class extends Component {
 
     <div class="mt-6 text-center">
         <div class="font-bold text-lg text-secondary">
-            Additional insights on validation tests
+            Additional insights on the validation process.
         </div>
-        <p>On average, a test required <span class="text-primary font-bold">{{ $this->mean }}</span> iterations to reach a correct result.</p>
-        <p>A total of <span class="text-primary font-bold">{{ $this->failedProcess }}%</span> of tests did not produce a valid result and reached the maximum allowed iterations.</p>
-    </div>
+        <p>On average, a test case required <span class="text-primary font-bold">{{ $this->mean }}</span> iterations to reach a correct result.</p>
+        <p>A total of <span class="text-primary font-bold">{{ $this->failedProcess }}%</span> of cases did not produce a valid result and reached the maximum allowed iterations.</p>
+        <p>A total of <span class="text-primary font-bold">{{ $this->rightAtFirst }}</span> cases were generated correctly and passed all the tests on the first iteration.</p>
+        <p><span class="text-secondary italic">Galicia</span>'s process refined <span class="text-primary font-bold">{{ $this->betterCode }}</span> codes. These did not pass all tests on the first iteration, but were successfully validated before the final iterations.</p>    </div>
+
 
 </x-card>

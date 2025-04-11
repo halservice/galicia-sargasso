@@ -85,7 +85,7 @@ class CodeValidationAction
         **Output format:**
         1. '### Test cases:' A brief explanation of each test result, specifying whether it passed or failed **on the original code**. If a test case is discarded, explain why. Leave an empty line after every test.
         2. '### Number of test failed:' An integer indicating how many test cases **failed in the original code** (0 if all tests passed without modifications).
-        3. '### Validated code:' The refined code after resolving any failed tests, or the original code if all tests passed immediately. You must provide the code within appropriate code blocks and with the programming language {$code->programming_language->value}.
+        3. '### Validated code:' The refined code after resolving any failed tests, or the original code if all tests passed immediately. You must provide the code within appropriate code blocks and with the programming language {$code->programming_language->value}. DO NOT add any comment in this section.
         4. '### Changes Made:' Listing any fixes or improvements in the code (or stating 'No changes needed.').";
         $userMessage = "Verify this code:\n {$code->generated_code}.\nFollowing the test cases:\n {$testCases}";
 

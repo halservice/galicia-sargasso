@@ -40,7 +40,12 @@
 {{--                <x-list-item :item="$user" value="name" sub-value="email" no-separator no-hover class="-mx-2 !-my-2 rounded">--}}
                 <x-list-item :item="$user" value="name" sub-value="email" no-separator no-hover class="-mx-2 !-my-2 rounded">
                     <x-slot:actions>
-                        <x-button icon="o-power" class="btn-circle btn-ghost btn-xs" tooltip-left="logoff" no-wire-navigate link="/logout" />
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit" class="btn-circle btn-ghost btn-xs" title="logoff">
+                                <x-icon name="o-power" />
+                            </button>
+                        </form>
                     </x-slot:actions>
 
                 </x-list-item>
@@ -52,7 +57,7 @@
             <x-menu-item title="Code Validation"  icon="o-check-badge" link="/code-validation" />
             <x-menu-item title="Feedback" icon="o-chart-bar-square" link="/feedback" />
             <x-menu-item title="Settings" icon="o-cog-6-tooth" link="/settings" />
-{{--            <x-menu-item title="Statistics"  icon="o-chart-pie" link="/statistics" />--}}
+            <x-menu-item title="Statistics"  icon="o-chart-pie" link="/statistics" />
             <x-menu-item title="Logs" icon="o-archive-box" link="/logs" />
 
         </x-menu>

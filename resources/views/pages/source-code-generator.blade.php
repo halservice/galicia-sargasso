@@ -150,7 +150,7 @@ new class extends \Livewire\Volt\Component {
 
         // salvo solo se code!=response, se è uguale è perché non ha trovato un codice.
         if ($this->code !== '') {
-            $this->result = "This is your requested code:\n\n" . $this->code;
+            $this->result = $this->code;
 
             GeneratedCode::log(
                 $this->startFromCode ? null : $this->generatedFormal->id,
