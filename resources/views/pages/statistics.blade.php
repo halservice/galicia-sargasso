@@ -84,13 +84,10 @@ new class extends Component {
         }
         $this->mean = $totalTest > 0 ? round($total / $totalTest, 2) : 0;
 
-
-
-
     }
 
     #[Computed]
-    public function monthlyChart()
+    public function monthlyChart(): Builder
     {
         $validatedCodes = GeneratedValidatedCode::select('id','created_at')
             ->whereYear('created_at', $this->currentYear)
@@ -125,7 +122,7 @@ new class extends Component {
             ->labels($labelsName)
             ->datasets([
                 [
-                    "label" => "Distribution of projects over months",
+                    "label" => "Distribution of test cases over months",
                     "data" => array_values($monthArr),
                     "fill" => false,
                 ],
@@ -147,7 +144,7 @@ new class extends Component {
     }
 
     #[Computed]
-    public function llmCodeChart()
+    public function llmCodeChart(): Builder
     {
         $labels = array_map(fn ($case) => $case->value, ProgrammingLanguage::cases());
         $data = GeneratedValidatedCode::with(['generator' => function ($query) {
@@ -160,17 +157,15 @@ new class extends Component {
         }])
             ->get()
             ->map(function ($item) {
-                if ($item->generator instanceof GeneratedFormalModel && $item->generator->generatedCode) {
-                    $item->programming_language = $item->generator->generatedCode->programming_language->name ?? null;
-//                } elseif ($item->generator instanceof GeneratedCode) {
-                } else {
-                    $item->programming_language = $item->generator->programming_language->name ?? null;
+
+                if ($item->generator instanceof GeneratedFormalModel) {
+                    $item->programming_language = $item->generator->generatedCode->programming_language->value ?? '';
                 }
-//                if ($item->generator instanceof GeneratedFormalModel) {
-//                    $item->programming_language = $item->generator->generatedCode->programming_language->value;
-//                } else {
-//                    $item->programming_language = $item->generator->programming_language->value;
-//                }
+
+                if ($item->generator instanceof GeneratedCode) {
+                    $item->programming_language = $item->generator->programming_language->value ?? '';
+                }
+
                 return $item;
             });
         $programmingLanguages = $data->pluck('programming_language')->toArray();
@@ -195,7 +190,7 @@ new class extends Component {
     }
 
     #[Computed]
-    public function iterationChart()
+    public function iterationChart(): Builder
     {
         $labels = ['1 iteration','2 iterations','3 iterations','4 iterations','5 iterations'];
         $data = [];
@@ -211,7 +206,7 @@ new class extends Component {
             ->labels($labels)
             ->datasets([
                 [
-                    "label" => "Distribution of projects over iterations",
+                    "label" => "Distribution of test cases over iterations",
                     'data' => $data,
                 ]
             ])
@@ -239,7 +234,6 @@ new class extends Component {
         shadow
         separator>
 
-
     <div class="flex flex-col items-center justify-center">
         <div class="font-bold text-2xl text-secondary flex justify-center">
             <h1>Galicia worked on&nbsp;</h1>
@@ -256,7 +250,17 @@ new class extends Component {
             <x-chartjs-component :chart="$this->monthlyChart" />
     </div>
 
-    <div class="font-bold text-xl text-secondary text-center">
+    <div class="mt-6 text-center">
+        <div class="font-bold text-2xl text-secondary">
+            Main insights on Galicia's process
+        </div>
+        <p><span class="text-secondary italic">Galicia</span>'s process refined <span class="text-primary font-bold">{{ $this->betterCode }}</span> codes. These did not pass all tests on the first iteration, but were successfully validated before the final iteration.</p>
+        <p>A total of <span class="text-primary font-bold">{{ $this->rightAtFirst }}</span> cases were generated correctly and passed all the tests on the first iteration.</p>
+        <p>On average, a test case required <span class="text-primary font-bold">{{ $this->mean }}</span> iterations to reach a correct result.</p>
+        <p>A total of <span class="text-primary font-bold">{{ $this->failedProcess }}%</span> of cases did not produce a valid result and reached the maximum allowed iterations.</p>
+    </div>
+
+    <div class="font-bold text-xl text-secondary text-center mt-3">
         Programming languages used in validation tests
     </div>
     <p class="text-center">The percentage of tests conducted for each programming language.</p>
@@ -271,15 +275,6 @@ new class extends Component {
     <div class="w-3/4 mx-auto flex justify-center mb-6">
         <x-chartjs-component :chart="$this->iterationChart" />
     </div>
-
-    <div class="mt-6 text-center">
-        <div class="font-bold text-lg text-secondary">
-            Additional insights on the validation process.
-        </div>
-        <p>On average, a test case required <span class="text-primary font-bold">{{ $this->mean }}</span> iterations to reach a correct result.</p>
-        <p>A total of <span class="text-primary font-bold">{{ $this->failedProcess }}%</span> of cases did not produce a valid result and reached the maximum allowed iterations.</p>
-        <p>A total of <span class="text-primary font-bold">{{ $this->rightAtFirst }}</span> cases were generated correctly and passed all the tests on the first iteration.</p>
-        <p><span class="text-secondary italic">Galicia</span>'s process refined <span class="text-primary font-bold">{{ $this->betterCode }}</span> codes. These did not pass all tests on the first iteration, but were successfully validated before the final iterations.</p>    </div>
 
 
 </x-card>

@@ -27,6 +27,8 @@ new class extends \Livewire\Volt\Component {
     #[Url]
     public ?int $formalId = null;
 
+    public bool $skipCheck = false;
+
     protected ?GeneratedFormalModel $generatedFormal = null;
     protected ?UserSetting $settings = null;
 //    protected ?CodeGeneratorSettings $settings = null;
@@ -35,7 +37,7 @@ new class extends \Livewire\Volt\Component {
     public string $code = '';
 
     protected ?GeneratedCode $lastCode = null;
-
+    public array $conversationThread = [];
 
     public function mount(): void
     {
@@ -68,7 +70,13 @@ new class extends \Livewire\Volt\Component {
 
     }
 
-    public function send($checkPrompt = false): void
+    public function sendWithCheckbox(): void
+    {
+        $this->send(!$this->skipCheck);
+    }
+
+
+    public function send(bool $checkPrompt): void
     {
         // se parto dalla generazione del modello formale, ogni volta che creo un nuovo codice is_active si
         // disattiva solo su codice e validazione. mantengo ciò che ho prima ma posso modificare quello dopo.
@@ -92,6 +100,7 @@ new class extends \Livewire\Volt\Component {
             LLM::Llama->value => new LLama(),
             default => new ChatGPT()
         };
+        $model = auth()->user()->settings->llm_code;
 
         // due comandi di sistemi differenti a seconda del metodo che uso
         if (!$this->startFromCode) {
@@ -142,29 +151,49 @@ new class extends \Livewire\Volt\Component {
             return;
         }
 
-        $model = auth()->user()->settings->llm_code;
-//        $model = \Auth::user()->settings->llm_code;
-        $message = $coder->systemMessage($systemMessage, $this->text);
-        $response = $coder->send($message, $model);
+        if ($checkPrompt) {
+            if (empty($this->conversationThread)) {
+                $this->conversationThread[] = [
+                    'role' => 'system',
+                    'content' => $systemMessage
+                ];
+            }
+
+            $this->conversationThread[] = [
+                'role' => 'user',
+                'content' => $this->text
+            ];
+
+            $response = $coder->send($this->conversationThread, $model);
+        }else{
+            $message = $coder->systemMessage($systemMessage, $this->text);
+            $response = $coder->send($message, $model);
+        }
+
         $this->code = $this->extractCodeFromResponse($response);
 
         // salvo solo se code!=response, se è uguale è perché non ha trovato un codice.
         if ($this->code !== '') {
             $this->result = $this->code;
-
+            $this->conversationThread = [];
             GeneratedCode::log(
                 $this->startFromCode ? null : $this->generatedFormal->id,
                 $systemMessage,
                 $this->text,
                 $this->result,
             );
-        } else {
+        } elseif ($checkPrompt) {
             $this->result = $this->extractRequestNewInfo($response);
             $samplePrompt = $this->extractSamplePrompt($response);
+            $this->conversationThread[] = [
+                'role' => 'assistant',
+                'content' => $this->result,
+            ];
             if ($samplePrompt != '') {
                 $this->text = $samplePrompt;
-
             }
+        }else{
+            $this->result = "Error: please try again.";
         }
     }
 
@@ -172,6 +201,7 @@ new class extends \Livewire\Volt\Component {
     {
         app(ResetGeneratorsAction::class)();
         $this->reset('text', 'result');
+        $this->conversationThread = [];
     }
 }
 ?>
@@ -181,7 +211,7 @@ new class extends \Livewire\Volt\Component {
     >
 
     @if(! $this->startFromCode)
-        <x-form wire:submit="send" no-separator class="flex flex-col items-center justify-center">
+        <x-form wire:submit="sendWithCheckbox" no-separator class="flex flex-col items-center justify-center">
             @if($this->generatedFormal?->is_active)
                 <h2 class="text-center font-bold text-2xl">Would you like to generate the source code?</h2>
                 <x-slot:actions>
@@ -190,8 +220,8 @@ new class extends \Livewire\Volt\Component {
                             class="btn-secondary"
                             type="submit" wire:loading.attr="disabled"
                             >
-                            <span wire:loading.remove wire:target="send">Generate the code</span>
-                            <span wire:loading wire:target="send" class="flex items-center">
+                            <span wire:loading.remove wire:target="sendWithCheckbox">Generate the code</span>
+                            <span wire:loading wire:target="sendWithCheckbox" class="flex items-center">
                          <x-icon name="o-arrow-path" class="animate-spin mr-2"/>
                          Generating the code...
                         </span>
@@ -204,33 +234,34 @@ new class extends \Livewire\Volt\Component {
             @endif
         </x-form>
     @else
-        <x-form wire:submit="send" no-separator>
+        <x-form wire:submit="sendWithCheckbox" no-separator>
             <x-textarea
                 wire:model="text"
                 placeholder="Type your natural language input here..."
                 rows="4"
-                wire:keydown.enter="send(true)"
+                wire:keydown.enter="sendWithCheckbox"
                 inline
             />
             <x-slot:actions>
-                <x-button class="btn-primary" type="button" wire:loading.attr="disabled"
-{{--                          wire:keydown.ctrl.enter="send" --}}
-                          wire:click="send(false)">
-                    <span wire:loading.remove wire:target="send(false)">Send</span>
-                    <span wire:loading wire:target="send(false)" class="flex items-center">
-                 <x-icon name="o-arrow-path" class="animate-spin mr-2"/>
-                 Sending...
-                </span>
-                </x-button>
-                <x-button class="btn-primary" type="button" wire:loading.attr="disabled" wire:click="send(true)">
-                    <span wire:loading.remove wire:target="send(true)">Check prompt & send</span>
-                    <span wire:loading wire:target="send(true)" class="flex items-center">
-                 <x-icon name="o-arrow-path" class="animate-spin mr-2"/>
-                 Checking prompt...
-                </span>
-                </x-button>
-                <x-button label="Reset" class="btn-secondary" wire:loading.attr="disabled"
-                          wire:click="clear"/>
+                <div class="flex flex-col items-end gap-4 w-full">
+                    <div class="flex gap-4 w-full justify-end">
+                        <x-button class="btn-primary" type="button" wire:loading.attr="disabled" wire:click="sendWithCheckbox">
+                            <span wire:loading.remove wire:target="sendWithCheckbox">Send</span>
+                            <span wire:loading wire:target="sendWithCheckbox" class="flex items-center">
+                         <x-icon name="o-arrow-path" class="animate-spin mr-2"/>
+                        Sending...
+                        </span>
+                        </x-button>
+                        <x-button label="Reset" class="btn-secondary" wire:loading.attr="disabled"
+                                  wire:click="clear"/>
+                    </div>
+
+                    <div class="flex items-center space-x-2">
+                        <input type="checkbox" wire:model="skipCheck" />
+                        <span>Don't check the prompt</span>
+                    </div>
+                </div>
+
             </x-slot:actions>
         </x-form>
     @endif
