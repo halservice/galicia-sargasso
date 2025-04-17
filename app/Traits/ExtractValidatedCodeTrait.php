@@ -10,6 +10,10 @@ trait ExtractValidatedCodeTrait
             return trim($matches[1]);
         }
 
+        if (preg_match('/### Validated code:\s*(.+)/s', $response, $matches)) {
+            return trim($matches[1]);
+        }
+
         return trim($response);
     }
 }

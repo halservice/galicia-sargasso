@@ -258,7 +258,7 @@ new class extends \Livewire\Volt\Component {
 
                     <div class="flex items-center space-x-2">
                         <input type="checkbox" wire:model="skipCheck" />
-                        <span>Don't check the prompt</span>
+                        <span>Disable prompt review</span>
                     </div>
                 </div>
 

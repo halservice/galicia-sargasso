@@ -140,6 +140,7 @@ class CodeValidationAction
 //        }
 
         $testResults = $this->extractTestResult(end($messages)['content']);
+
         return GeneratedValidatedCode::log(
             $settings->startFromGeneratedCode() ? $formalModel : $code,
             $testCases,

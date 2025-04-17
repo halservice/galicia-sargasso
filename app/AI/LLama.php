@@ -31,6 +31,7 @@ class LLama
     {
         try {
             $response = Http::withToken(config('services.mindinabox.api_key'))
+                ->timeout(60)
                 ->post("https://astro-llama.internal.mindinabox.io/v1/chat/completions", [
                     'model' => 'meta-llama/Llama-3.1-8B-Instruct',
                     'messages' => $message,
