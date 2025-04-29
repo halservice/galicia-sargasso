@@ -137,16 +137,15 @@ new class extends \Livewire\Volt\Component {
             @foreach($this->iterations as $index => $iteration)
                 <p class="font-bold text-secondary">Iteration {{ $iteration['iteration'] }}:</p>
                 <p>Number of test failed: {{ $iteration['num_fails'] }}</p>
-                <p class="italic">Overview of the iteration:</p>
                 <ul class="list-disc ml-5">
                     @foreach($iteration['modifications'] as $mod)
                         {{ $mod }}<br>
                     @endforeach
                 </ul>
                 <div class="flex justify-left w-full gap-5">
-                    <x-button label="Show validated code" class="btn-secondary"
+                    <x-button label="Show source code produced in this iteration" class="btn-secondary"
                               wire:click="showIteration({{ $index }}, 'iteration')"/>
-                    <x-button label="Show test cases result" class="btn-secondary"
+                    <x-button label="Show test cases result in this iteration" class="btn-secondary"
                               wire:click="showIteration({{ $index }}, 'testResult')"/>
                 </div>
             @endforeach

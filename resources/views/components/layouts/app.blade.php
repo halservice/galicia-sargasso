@@ -58,7 +58,7 @@
             <x-menu-item title="Feedback" icon="o-chart-bar-square" link="/feedback" />
             <x-menu-item title="Settings" icon="o-cog-6-tooth" link="/settings" />
             <x-menu-item title="Statistics"  icon="o-chart-pie" link="/statistics" />
-            <x-menu-item title="Logs" icon="o-archive-box" link="/logs" />
+            <x-menu-item title="Logs" icon="o-circle-stack" link="/logs" />
 
         </x-menu>
     </x-slot:sidebar>

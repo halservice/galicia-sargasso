@@ -11,7 +11,6 @@ use App\Enums\Sequence;
 use App\Settings\CodeGeneratorSettings;
 use Livewire\Attributes\Validate;
 
-// @phpstan-ignore-next-line
 new class extends \Livewire\Volt\Component {
 
     #[Validate('required|string')]
@@ -37,12 +36,10 @@ new class extends \Livewire\Volt\Component {
 
     protected ?User $user = null;
     protected ?UserSetting $settings = null;
-//    protected ?CodeGeneratorSettings $settings = null;
 
     public function boot(): void
     {
         $this->settings = UserSetting::where('user_id',auth()->id())->first();
-//        $this->settings = app(CodeGeneratorSettings::class);
     }
 
     public function mount(): void
@@ -62,13 +59,13 @@ new class extends \Livewire\Volt\Component {
             'languages' => ProgrammingLanguage::options(),
             'models' => ModelTool::options(),
             'llms' => LLM::options(),
-            'sequences' => \App\Enums\Sequence::options(),
+            'sequences' => Sequence::options(),
         ];
     }
 
     public function save(): void
     {
-        //imposto parametri definiti se sforo con i valori delle iterations
+        // Max number of iterations is five.
         if ($this->iteration < 1) {
             $this->iteration = 1;
         } elseif ($this->iteration > 5) {

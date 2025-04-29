@@ -136,6 +136,7 @@ new class extends \Livewire\Volt\Component {
             - Avoid technical questions unless necessary. Keep your questions simple and relevant to the core functionality.
             - Your clarification requests should be based on general knowledge and should not assume the user has programming expertise.
             - Do not ask for details that can reasonably be assumed.
+            - Only if the user explicitly ask for a formal model in a tool different than the formal model tool in the prompt $formalTool. Explain you only use $formalTool unless changed in the settings page.
             Format your clarification request as follows:
             - Always start with '**Requesting new info**:'
             - [List the missing details]
