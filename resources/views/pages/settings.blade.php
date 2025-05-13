@@ -11,6 +11,7 @@ use App\Enums\Sequence;
 use App\Settings\CodeGeneratorSettings;
 use Livewire\Attributes\Validate;
 
+// @phpstan-ignore-next-line
 new class extends \Livewire\Volt\Component {
 
     #[Validate('required|string')]

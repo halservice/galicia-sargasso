@@ -2,7 +2,7 @@
 
 namespace App\Traits;
 
-trait checkChanges
+trait CheckChanges
 {
     protected function checkChanges(string $response): int
     {

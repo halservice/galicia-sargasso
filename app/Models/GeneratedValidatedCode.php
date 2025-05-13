@@ -9,10 +9,20 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
-
+/**
+ * @property string $user_input
+ * @property string $formal_model
+ * @property string $formal_LLM
+ * @property string $formal_model_tool
+ * @property string $test_cases
+ * @property string $programming_language
+ * @property string $first_code
+ * @property string $code_LLM
+ * @property string $generator_type
+ */
 class GeneratedValidatedCode extends Model
 {
-    /** @use HasFactory<GeneratedValidatedCode> */
+//    /** @use HasFactory<GeneratedValidatedCode> */
     use HasFactory;
 
     use HasActiveColumn;
@@ -27,7 +37,9 @@ class GeneratedValidatedCode extends Model
     {
         $setting = UserSetting::where('user_id',auth()->id())->first();
 
-        return tap((new static())
+        /** @var GeneratedCode|GeneratedFormalModel $generator */
+        /** @phpstan-ignore-next-line */
+        $validated = (new static())
             ->forceFill([
                 'system_message' => $systemMessage,
                 'user_id' => auth()->id(),
@@ -40,12 +52,15 @@ class GeneratedValidatedCode extends Model
                 'is_active' => true,
             ])
             ->generator()
-            ->associate($generator))
-            ->save();
+            ->associate($generator);
+
+            $validated->save();
+
+            return $validated;
     }
 
     /**
-     * @return MorphTo<GeneratedCode|GeneratedFormalModel>
+     * @return MorphTo<GeneratedCode|GeneratedFormalModel, GeneratedValidatedCode>
      */
     public function generator(): MorphTo
     {
@@ -53,7 +68,7 @@ class GeneratedValidatedCode extends Model
     }
 
     /**
-     * @return BelongsTo<User>
+     * @return BelongsTo<User, GeneratedValidatedCode>
      */
     public function user(): BelongsTo
     {

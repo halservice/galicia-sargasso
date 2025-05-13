@@ -1,66 +1,11 @@
 <?php
 
-namespace App\Actions;
+namespace App\SystemMessages;
 
-use App\AI\ChatGPT;
-use App\AI\LLama;
-use App\Enums\LLM;
-use App\Models\UserSetting;
-use App\Models\GeneratedFormalModel;
-
-class CodeGenerationAction
+class CodeGenerationMessages
 {
-    public function __invoke(array $params): array
+    public function systemMessage(string $language, bool $startFromCode, bool $checkPrompt): string
     {
-        $checkPrompt = $params['checkPrompt'];
-        $startFromCode = $params['startFromCode'];
-        $text = $params['text'];
-        $settings = $params['settings'];
-        $conversationThread = $params['conversationThread'] ?? [];
-
-        // Create a new chat
-        $coder = match ($settings->llm_code) {
-            LLM::Llama->value => new LLama(),
-            default => new ChatGPT(),
-        };
-
-        $model = $settings->llm_code;
-
-        // Get the system message.
-        $systemMessage = $this->systemMessage($settings, $startFromCode, $checkPrompt);
-
-        if ($checkPrompt) {
-            // If the request is to check the prompt then:
-            // 1. If it's the first request then the $conversationThread is empty, first upload the $systemMessage
-            // 2. Then also upload the new user request
-            if (empty($conversationThread)) {
-                $conversationThread[] = [
-                    'role' => 'system',
-                    'content' => $systemMessage
-                ];
-            }
-            $conversationThread[] = [
-                'role' => 'user',
-                'content' => $text
-            ];
-            $response = $coder->send($conversationThread, $model);
-        }else{
-            $message = $coder->systemMessage($systemMessage, $text);
-            $response = $coder->send($message, $model);
-        }
-
-        return [
-            'response' => $response,
-            'systemMessage' => $systemMessage,
-            'conversationThread' => $conversationThread
-        ];
-
-    }
-
-    private function systemMessage(UserSetting $settings, bool $startFromCode, bool $checkPrompt): string
-    {
-        $language = $settings->programming_language;
-
         if (!$startFromCode) {
             return "You are an expert programmer.
             Generate clean and secure code based on user requirements and given formal model, using the following programming language: $language.

@@ -3,8 +3,6 @@
 use App\Models\GeneratedCode;
 use App\Models\GeneratedFormalModel;
 use App\Models\GeneratedValidatedCode;
-
-//use App\Settings\CodeGeneratorSettings;
 use App\Models\UserSetting;
 use Livewire\Attributes\Computed;
 
@@ -14,29 +12,26 @@ new class extends \Livewire\Volt\Component {
     public array $iterations = [];
 
     public bool $showDrawer = false;
-    public string $activeContent = '';
     public ?int $selectedIterationIndex = null;
     public int $iterationNumber = 0;
 
-
-//    protected ?CodeGeneratorSettings $settings = null;
-    protected ?UserSetting $settings = null;
-
     public string $req = '';
+    public string $activeContent = '';
+
     public ?GeneratedCode $generatedCode = null;
     public ?GeneratedFormalModel $generatedFormal = null;
     public ?GeneratedValidatedCode $generatedValidation = null;
+    protected ?UserSetting $settings = null;
 
     public function boot(): void
     {
         $this->settings = UserSetting::where('user_id', auth()->id())->first();
-//        $this->settings = app(CodeGeneratorSettings::class);
-
         $this->generatedValidation = (GeneratedValidatedCode::where('user_id', auth()->id())
             ->latest()
             ->first());
-        if ($this->generatedValidation?->is_active) {
 
+        if ($this->generatedValidation?->is_active) {
+            // Upload the formal model and code.
             if ($this->settings->startFromGeneratedCode()) {
                 $this->generatedFormal = GeneratedFormalModel::findOrFail($this->generatedValidation->generator_id);
                 $this->generatedCode = $this->generatedFormal->generatedCode;

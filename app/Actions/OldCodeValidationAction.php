@@ -9,7 +9,7 @@ use App\Models\GeneratedCode;
 use App\Models\GeneratedFormalModel;
 use App\Models\GeneratedValidatedCode;
 use App\Models\UserSetting;
-use App\Traits\checkChanges;
+use App\Traits\CheckChanges;
 use App\Traits\ExtractCodeTrait;
 use Illuminate\Http\Client\ConnectionException;
 

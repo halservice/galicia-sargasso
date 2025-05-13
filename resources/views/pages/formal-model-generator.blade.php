@@ -7,18 +7,21 @@ use App\Enums\LLM;
 use App\Models\GeneratedCode;
 use App\Models\GeneratedFormalModel;
 use App\Models\GeneratedValidatedCode;
-
-//use App\Settings\CodeGeneratorSettings;
 use App\Models\UserSetting;
+use App\SystemMessages\FormalModelMessages;
 use App\Traits\ExtractCodeTrait;
+use App\Traits\ExtractRequestInfo;
+use App\Traits\ExtractSamplePromptTrait;
+use App\Traits\GenerationTrait;
 use Carbon\Carbon;
 use Livewire\Attributes\{Locked, Computed, Url, Validate};
 
 // @phpstan-ignore-next-line
 new class extends \Livewire\Volt\Component {
     use ExtractCodeTrait;
-    use \App\Traits\ExtractRequestInfo;
-    use \App\Traits\ExtractSamplePromptTrait;
+    use GenerationTrait;
+    use ExtractRequestInfo;
+    use ExtractSamplePromptTrait;
 
     #[Locked]
     public string $result;
@@ -32,22 +35,17 @@ new class extends \Livewire\Volt\Component {
     public ?GeneratedFormalModel $lastFormal = null;
     public ?GeneratedCode $generatedCode = null;
     protected ?UserSetting $settings = null;
+
     public string $formal = '';
-//    protected ?CodeGeneratorSettings $settings = null;
 
     public bool $skipCheck = false;
-
     public bool $startFromCode = true;
-    public array $conversationThread = [];
 
-//    protected ?GeneratedCode $generated_code = null;
+    public array $conversationThread = [];
 
     public function mount(): void
     {
-        $this->lastFormal = GeneratedFormalModel::where('user_id', auth()->id())
-            ->latest()
-            ->first();
-
+        // If the session is active, upload previous test case parameters.
         if ($this->lastFormal?->is_active) {
             $this->text = $this->lastFormal->requirement;
             $this->formal = $this->lastFormal->generated_formal_model;
@@ -57,11 +55,13 @@ new class extends \Livewire\Volt\Component {
 
     public function boot(): void
     {
-//        $this->settings = app(CodeGeneratorSettings::class);
-        $this->settings = UserSetting::where('user_id',auth()->id())->first();
+        $this->settings = UserSetting::where('user_id', auth()->id())->first();
         $this->startFromCode = $this->settings->startFromGeneratedCode();
-
-        // Se parto dal codice ho bisogno di recuperare info del codice, controllando che questo esista e sia attivo
+        $this->lastFormal = GeneratedFormalModel::where('user_id', auth()->id())
+            ->latest()
+            ->first();
+        // If process starts from code generation, then upload the current active code.
+        // Needed for the formal model generation.
         $code = GeneratedCode::where('user_id', auth()->id())
             ->latest()
             ->first();
@@ -75,139 +75,92 @@ new class extends \Livewire\Volt\Component {
         $this->send(!$this->skipCheck);
     }
 
+    public function deactivatePreviousFormalModel(): void
+    {
+        $this->lastFormal?->update(['is_active' => false]);
+        GeneratedValidatedCode::where('user_id', auth()->id())->latest()->update(['is_active' => false]);
+    }
+
     public function send(bool $checkPrompt): void
     {
-
-        // se parto dalla generazione del codice, ogni volta che creo un nuovo modello is_active si
-        // disattiva solo su modello e validazione. mantengo ciò che ho prima, ma posso modificare quello dopo.
-        if ($this->startFromCode) {
-            if ($this->lastFormal) {
-                $this->lastFormal->is_active = false;
-                $this->lastFormal->update();
-            }
-            $lastValidation = GeneratedValidatedCode::where('user_id', auth()->id())
-                ->latest()
-                ->first();
-            if ($lastValidation) {
-                $lastValidation->is_active = false;
-                $lastValidation->update();
-            }
-        } else {  //se parto dal codice con un nuovo codice resetto tutto, sto partendo da capo.
-            app(ResetGeneratorsAction::class)();
-        }
-
-        $coder = match ($this->settings->llm_formal) {
-            LLM::Llama->value => new LLama(),
-            default => new ChatGPT()
-        };
-
-        $formalTool = ($this->settings->model_tool === 'Let the LLM choose the most suitable model')
+        // User's prompt info:
+        // 1. If the process start from the formal model then use the user direct input
+        // 2. If the process start from the code generation then create a specified prompt with the code's info
+        // 3. The user prompt can't be empty. If empty then an error message is displayed.
+        $language = $this->settings->model_tool;
+        $formalTool = ($language === 'Let the LLM choose the most suitable model')
             ? "the optimal formal model tool for this specific request between NuSMV and Event-B"
-            : $this->settings->model_tool;
-
-        // due comandi di sistemi differenti a seconda del metodo che uso
+            : $language;
         if ($this->startFromCode) {
-            $system_message = "You are an expert in formal verification using $formalTool.
-            Generate a formal model based on the user-provided requirements and a given program source codes. You must always generate a formal model in $formalTool even if the user requested a code. You do not generate code.
-            **Rules:**
-            - The model must represent only the core logic of the requirement—DO NOT introduce unnecessary constraints, states, transitions, or conditions unless required.
-            - If the requirement is straightforward (e.g., printing a message), use the simplest representation without unnecessary states.
-            - DO NOT impose **any** value constraints (e.g., variable ranges like `0..255`) unless they are **explicitly** stated in the requirement. Use unconstrained types instead.
-            - DO NOT enforce additional control variables (e.g., state flags) unless required.
-            - Output only the formal model in a correctly formatted code block, with the appropriate language specification.
-            - No explanations or comments—only the formal model itself.";
             $this->text = "Generate a formal model in $formalTool for the following requirements: {$this->generatedCode->requirement} and the following code:{$this->generatedCode->generated_code}";
-        } elseif ($checkPrompt===true) {
-            $system_message = "You are an expert in formal verification using $formalTool.
-            Generate a *formal model* based on the user-provided requirements. You must always generate a formal model in $formalTool even if the user requested a code. You do not generate code.
-            **Rules:**
-            - The model must represent only the core logic of the requirement—DO NOT introduce unnecessary constraints, states, transitions, or conditions unless required.
-            - If the requirement is straightforward (e.g., printing a message), use the simplest representation without unnecessary states.
-            - DO NOT impose **any** value constraints (e.g., variable ranges like `0..255`) unless they are **explicitly** stated in the requirement. Use unconstrained types instead.
-            - DO NOT enforce additional control variables (e.g., state flags) unless required.
-            - Output only the formal model in a correctly formatted code block, with the appropriate language specification.
-            - No explanations or comments—only the formal model itself.
-
-            Handling unclear requests:
-            If the user request is ambiguous or lacks necessary details, do not generate a formal model. Instead, ask for clarification by specifying what additional information is needed.
-            When asking for clarification:
-            - Use the same language as the user request
-            - Focus on practical aspects needed to implement the functionality
-            - Avoid technical questions unless necessary. Keep your questions simple and relevant to the core functionality.
-            - Your clarification requests should be based on general knowledge and should not assume the user has programming expertise.
-            - Do not ask for details that can reasonably be assumed.
-            - Only if the user explicitly ask for a formal model in a tool different than the formal model tool in the prompt $formalTool. Explain you only use $formalTool unless changed in the settings page.
-            Format your clarification request as follows:
-            - Always start with '**Requesting new info**:'
-            - [List the missing details]
-            - Always end with '**Please, use the new revised prompt and modify it.**'
-            If clarification is needed, provide a sample revised prompt for the user to follow. Format it as follows:
-            - Start with 'Start sample prompt'
-            - Include a modified prompt of the user request that incorporates all the missing details. Make sure to NOT modify the data already given by the user. If the user has to add something use [] to encapsulate the placeholders.
-            - End with 'End sample prompt'
-            This way, the user can easily adjust their request based on your suggestions.";
-
-        }else{
-            $system_message = "You are an expert in formal verification using $formalTool.
-            Generate a *formal model* based on the user-provided requirements. You must always generate a formal model in $formalTool even if the user requested a code. You do not generate codes.
-            **Rules:**
-            - The model must represent only the core logic of the requirement—DO NOT introduce unnecessary constraints, states, transitions, or conditions unless required.
-            - If the requirement is straightforward (e.g., printing a message), use the simplest representation without unnecessary states.
-            - DO NOT impose **any** value constraints (e.g., variable ranges like `0..255`) unless they are **explicitly** stated in the requirement. Use unconstrained types instead.
-            - DO NOT enforce additional control variables (e.g., state flags) unless required.
-            - Output only the formal model in a correctly formatted code block, with the appropriate language specification.
-            - No explanations or comments—only the formal model itself.
-            - The output must always be in the syntax of $formalTool.";
         }
         if (trim($this->text) === '') {
             $this->result = "Error: the text field can't be empty.";
             return;
         }
-        $model = auth()->user()->settings->llm_formal;
 
-        if ($checkPrompt) {
-            if (empty($this->conversationThread)) {
-                $this->conversationThread[] = [
-                    'role' => 'system',
-                    'content' => $system_message
-                ];
-            }
-
-            $this->conversationThread[] = [
-                'role' => 'user',
-                'content' => $this->text
-            ];
-
-            $response = $coder->send($this->conversationThread, $model);
-        }else{
-            $message = $coder->systemMessage($system_message, $this->text);
-            $response = $coder->send($message, $model);
+        // When generating new formal model:
+        // - If starting from code generation (startFromCode=true), deactivate only previous active formal model and validated code.
+        // - If starting from formal model (startFromCode=false), deactivate ALL previous code, formal models, validation codes.
+        if ($this->startFromCode) {
+            $this->deactivatePreviousFormalModel();
+        } else {
+            app(ResetGeneratorsAction::class)();
         }
+
+        $systemMessage = app(FormalModelMessages::class)->systemMessage(
+            $formalTool,
+            $this->startFromCode,
+            $checkPrompt,
+        );
+
+        $data = $this->chat([
+            'checkPrompt' => $checkPrompt,
+            'startFromCode' => $this->startFromCode,
+            'text' => $this->text,
+            'settings' => $this->settings,
+            'conversationThread' => $this->conversationThread,
+            'model' => $this->settings->llm_formal,
+            'systemMessage' => $systemMessage
+        ]);
+
+        $this->handleResponse($data, $systemMessage, $checkPrompt);
+    }
+
+    protected function handleResponse(array $data, string $systemMessage, bool $checkPrompt): void
+    {
+        $response = $data['response'];
+        $this->conversationThread = $data['conversationThread'];
 
         $this->formal = $this->extractCodeFromResponse($response);
 
-        if ($this->formal != '') {
+        if ($this->formal !== '') {
+            // If code is found, save the new generated code.
             $this->result = $this->formal;
             $this->conversationThread = [];
             GeneratedFormalModel::log(
-                $this->startFromCode ? $this->generatedCode->id : null,
-                $system_message,
+                !$this->startFromCode ? null : $this->generatedCode?->id,
+                $systemMessage,
                 $this->text,
-                $this->result,
+                $this->formal
             );
-
-        } elseif ($checkPrompt){
+        } elseif ($checkPrompt) {
+            // If code is not found and the process is also checking the prompt, it means the process requires additional information:
+            // 1. Extract the new requested info to show the user
+            // 2. Extract the sample prompt to give the user
+            // 3. To keep track of the previous request from the system write them in $conversationThread
             $this->result = $this->extractRequestNewInfo($response);
             $samplePrompt = $this->extractSamplePrompt($response);
             $this->conversationThread[] = [
                 'role' => 'assistant',
                 'content' => $this->result,
             ];
-            if($samplePrompt != ''){
-                $this->text=$samplePrompt;
+            if ($samplePrompt !== '') {
+                $this->text = $samplePrompt;
             }
-        }else{
-            $this->text = "Error: please try again.";
+        } else {
+            // If there is no code found && the process is not checking the prompt then print an error.
+            $this->result = "Error: please try again.";
         }
     }
 
@@ -248,52 +201,10 @@ new class extends \Livewire\Volt\Component {
             @endif
         </x-form>
     @else
-        <x-form wire:submit="sendWithCheckbox" no-separator>
-            <x-textarea
-                wire:model="text"
-                placeholder="Type your natural language input here..."
-                rows="4"
-                wire:keydown.enter="sendWithCheckbox"
-                inline
-            />
-            <x-slot:actions>
-                <div class="flex flex-col items-end gap-4 w-full">
-                    <div class="flex gap-4 w-full justify-end">
-                        <x-button class="btn-primary" type="button" wire:loading.attr="disabled" wire:click="sendWithCheckbox">
-                            <span wire:loading.remove wire:target="sendWithCheckbox">Send</span>
-                            <span wire:loading wire:target="sendWithCheckbox" class="flex items-center">
-                         <x-icon name="o-arrow-path" class="animate-spin mr-2"/>
-                        Sending...
-                        </span>
-                        </x-button>
-                        <x-button label="Reset" class="btn-secondary" wire:loading.attr="disabled"
-                                  wire:click="clear"/>
-                    </div>
-
-                    <div class="flex items-center space-x-2">
-                        <input type="checkbox" wire:model="skipCheck" />
-                        <span>Disable prompt reviewt</span>
-                    </div>
-                </div>
-
-            </x-slot:actions>
-        </x-form>
+        <x-send-first-step/>
     @endif
 
-
-    @if(isset($result))
-        @if($formal != '')
-            <div class="rounded-[10px] p-[15px] gap-[5px] w-fit break-words mr-auto mb-5 bg-[#3864fc] text-white mt-5 max-w-4xl">
-                <code>
-                    <pre class="whitespace-pre-wrap">{{ $result }}</pre>
-                </code>
-            </div>
-        @else
-            <div class="rounded-[10px] p-[15px] gap-[5px] w-fit break-words mr-auto mb-5 bg-orange-400 text-white mt-5 max-w-4xl">
-                <p class="whitespace-pre-wrap">{!! Str::markdown($result) !!}</p>
-            </div>
-        @endif
-    @endif
+        <x-display-result :result="$result" :is-code="$formal != ''"/>
 
 </x-card>
 

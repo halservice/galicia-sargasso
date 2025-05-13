@@ -1,6 +1,5 @@
 <?php
 
-use App\Actions\CodeGenerationAction;
 use App\Actions\ResetGeneratorsAction;
 use App\AI\ChatGPT;
 use App\AI\LLama;
@@ -8,15 +7,21 @@ use App\Enums\LLM;
 use App\Models\GeneratedCode;
 use App\Models\UserSetting;
 use App\Models\GeneratedFormalModel;
+use App\SystemMessages\CodeGenerationMessages;
 use App\Traits\ExtractCodeTrait;
+use App\Traits\ExtractRequestInfo;
+use App\Traits\ExtractSamplePromptTrait;
+use App\Traits\GenerationTrait;
 use Carbon\Carbon;
 use Livewire\Attributes\{Locked, Computed, Url, Validate};
 use App\Models\GeneratedValidatedCode;
 
+// @phpstan-ignore-next-line
 new class extends \Livewire\Volt\Component {
     use ExtractCodeTrait;
-    use \App\Traits\ExtractRequestInfo;
-    use \App\Traits\ExtractSamplePromptTrait;
+    use ExtractRequestInfo;
+    use ExtractSamplePromptTrait;
+    use GenerationTrait;
 
     #[Validate('required|string')]
     public string $text = '';
@@ -40,11 +45,10 @@ new class extends \Livewire\Volt\Component {
 
     public function mount(): void
     {
-        // If still active, upload previous test case parameters.
+        // If the session is active, upload previous test case parameters.
         $this->lastCode = GeneratedCode::where('user_id', auth()->id())
             ->latest()
             ->first();
-
         if ($this->lastCode?->is_active) {
             $this->text = $this->lastCode->requirement;
             $this->code = $this->lastCode->generated_code;
@@ -55,8 +59,11 @@ new class extends \Livewire\Volt\Component {
 
     public function boot(): void
     {
-        $this->settings = UserSetting::where('user_id',auth()->id())->first();
+        $this->settings = UserSetting::where('user_id', auth()->id())->first();
         $this->startFromCode = $this->settings->startFromGeneratedCode();
+        $this->lastCode = GeneratedCode::where('user_id', auth()->id())
+            ->latest()
+            ->first();
 
         // If process starts from formal model, then upload the current active formal model.
         // Needed for the code generation.
@@ -77,7 +84,7 @@ new class extends \Livewire\Volt\Component {
     public function deactivatePreviousCode(): void
     {
         $this->lastCode?->update(['is_active' => false]);
-        GeneratedValidatedCode::where('user_id', auth()->id())->latest()?->update(['is_active' => false]);
+        GeneratedValidatedCode::where('user_id', auth()->id())->latest()->update(['is_active' => false]);
     }
 
     public function send(bool $checkPrompt): void
@@ -85,39 +92,48 @@ new class extends \Livewire\Volt\Component {
         // User's prompt info:
         // 1. If the process start from the code then use the user direct input
         // 2. If the process start from the formal model then create a specified prompt with the formal model's info
-        // 3. The user prompt can't be empty. In case it's empty then an error message is given.
+        // 3. The user prompt can't be empty. If empty then an error message is displayed.
         if (!$this->startFromCode) {
             $this->text = "Generate a code in {$this->settings->programming_language} for the following requirements: {$this->generatedFormal->requirement} and the following formal model:{$this->generatedFormal->generated_formal_model}";
         }
-
-            if (trim($this->text) === '') {
+        if (trim($this->text) === '') {
             $this->result = "Error: the text field can't be empty.";
             return;
         }
 
-        // Da controllare
+        // When generating new code:
+        // - If starting from formal model (startFromCode=false), deactivate only previous active generated code and validated code.
+        // - If starting from code generation (startFromCode=true), deactivate ALL previous code, formal models, validation codes.
         if (!$this->startFromCode) {
             $this->deactivatePreviousCode();
-        } else { //se parto dal codice con un nuovo codice resetto tutto, sto partendo da capo.
+        } else {
             app(ResetGeneratorsAction::class)();
         }
 
-        $data = app(CodeGenerationAction::class)([
+        // Get the system message.
+        $systemMessage = app(CodeGenerationMessages::class)->systemMessage(
+            $this->settings->programming_language,
+            $this->startFromCode,
+            $checkPrompt
+        );
+
+        $data = $this->chat([
             'checkPrompt' => $checkPrompt,
             'startFromCode' => $this->startFromCode,
             'text' => $this->text,
             'settings' => $this->settings,
             'conversationThread' => $this->conversationThread,
+            'model' => $this->settings->llm_code,
+            'systemMessage' => $systemMessage
         ]);
 
-        $this->handleResponse($data, $checkPrompt);
+        $this->handleResponse($data, $systemMessage, $checkPrompt);
 
     }
 
-    protected function handleResponse(array $data, bool $checkPrompt): void
+    protected function handleResponse(array $data, string $systemMessage, bool $checkPrompt): void
     {
         $response = $data['response'];
-        $systemMessage = $data['systemMessage'];
         $this->conversationThread = $data['conversationThread'];
 
         $this->code = $this->extractCodeFromResponse($response);
@@ -154,7 +170,7 @@ new class extends \Livewire\Volt\Component {
 
     public function clear(): void
     {
-        // Reset all info.
+        // Reset all info.user_settings
         app(ResetGeneratorsAction::class)();
         $this->reset('text', 'result');
         $this->conversationThread = [];
@@ -168,7 +184,7 @@ new class extends \Livewire\Volt\Component {
 >
 
     @if(! $this->startFromCode)
-{{--        Template if the process starts from the formal model generation, first the formal model must be generated. --}}
+        {{--        Template if the process starts from the formal model generation, first the formal model must be generated. --}}
         <x-form wire:submit="sendWithCheckbox" no-separator class="flex flex-col items-center justify-center">
             @if($this->generatedFormal?->is_active)
                 <h2 class="text-center font-bold text-2xl">Would you like to generate the source code?</h2>
@@ -193,56 +209,10 @@ new class extends \Livewire\Volt\Component {
         </x-form>
 
     @else
-{{--        If the process starts from the code generation then show text input space template--}}
-        <x-form wire:submit="sendWithCheckbox" no-separator>
-            <x-textarea
-                wire:model="text"
-                placeholder="Type your natural language input here..."
-                rows="4"
-                wire:keydown.enter="sendWithCheckbox"
-                inline
-            />
-            <x-slot:actions>
-                <div class="flex flex-col items-end gap-4 w-full">
-                    <div class="flex gap-4 w-full justify-end">
-                        <x-button class="btn-primary" type="button" wire:loading.attr="disabled"
-                                  wire:click="sendWithCheckbox">
-                            <span wire:loading.remove wire:target="sendWithCheckbox">Send</span>
-                            <span wire:loading wire:target="sendWithCheckbox" class="flex items-center">
-                         <x-icon name="o-arrow-path" class="animate-spin mr-2"/>
-                        Sending...
-                        </span>
-                        </x-button>
-                        <x-button label="Reset" class="btn-secondary" wire:loading.attr="disabled"
-                                  wire:click="clear"/>
-                    </div>
-
-                    <div class="flex items-center space-x-2">
-                        <input type="checkbox" wire:model="skipCheck"/>
-                        <span>Disable prompt review</span>
-                    </div>
-                </div>
-
-            </x-slot:actions>
-        </x-form>
+        <x-send-first-step/>
     @endif
 
-    @if(isset($result))
-{{--        Once the code generation is complete show the result to the user --}}
-        @if($code != '')
-            <div
-                class="rounded-[10px] p-[15px] gap-[5px] w-fit break-words mr-auto mb-5 bg-[#3864fc] text-white mt-5 max-w-4xl">
-                <code>
-                    <pre class="whitespace-pre-wrap">{{ $result }}</pre>
-                </code>
-            </div>
-        @else
-            <div
-                class="rounded-[10px] p-[15px] gap-[5px] w-fit break-words mr-auto mb-5 bg-orange-400 text-white mt-5 max-w-4xl">
-                <p class="whitespace-pre-wrap">{!! Str::markdown($result) !!}</p>
-            </div>
-        @endif
-    @endif
+    <x-display-result :result="$result" :is-code="$code != ''"/>
 
 </x-card>
 

@@ -34,7 +34,7 @@ class User extends Authenticatable
     }
 
     /**
-     * @return HasOne<UserSetting>
+     * @return HasOne<UserSetting, User>
      */
     public function settings(): HasOne
     {

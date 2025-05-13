@@ -13,14 +13,7 @@ class UserSetting extends Model
 {
     use HasFactory;
 
-//    protected $casts = [
-//        'programming_language' => ProgrammingLanguage::class,
-//        'llm_code' => LLM::class,
-//        'llm_formal' => LLM::class,
-//        'llm_validation' => LLM::class,
-//        'model_tool' => ModelTool::class,
-//        'sequence' => Sequence::class,
-//    ];
+
     protected $fillable = [
         'user_id',
         'programming_language',
@@ -33,7 +26,7 @@ class UserSetting extends Model
     ];
 
     /**
-     * @return BelongsTo<User>
+     * @return BelongsTo<User, UserSetting>
      */
     public function user(): BelongsTo
     {
@@ -42,7 +35,6 @@ class UserSetting extends Model
 
     public function startFromGeneratedCode(): bool
     {
-//        return $this->sequence === 'code-first';
         return $this->sequence === 'Generate Source Code first and then Formal Model';
 
     }

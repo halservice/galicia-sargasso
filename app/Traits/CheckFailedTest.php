@@ -2,7 +2,7 @@
 
 namespace App\Traits;
 
-trait checkFailedTest
+trait CheckFailedTest
 {
     protected function checkFailedTest(string $response): int
     {

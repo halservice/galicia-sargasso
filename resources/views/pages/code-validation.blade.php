@@ -22,20 +22,17 @@ new class extends \Livewire\Volt\Component {
 
     public string $req;
 
-//    protected ?CodeGeneratorSettings $settings = null;
-
     protected ?UserSetting $settings = null;
-    public ?GeneratedCode $generatedCode = null;
-    public ?GeneratedFormalModel $generatedFormal = null;
-    public ?GeneratedValidatedCode $lastValidation = null;
+    protected ?GeneratedCode $generatedCode = null;
+    protected ?GeneratedFormalModel $generatedFormal = null;
+    protected ?GeneratedValidatedCode $lastValidation = null;
+
+    public bool $startFromCode = true;
 
     public function mount(): void
     {
-        $this->lastValidation = GeneratedValidatedCode::where('user_id', auth()->id())
-            ->latest()
-            ->first();
-
-        if ($this->lastValidation?->is_active === true) {
+        // If the session is active, upload previous test case parameters.
+        if ($this->lastValidation?->is_active) {
             $this->result = $this->lastValidation->validated_code;
         }
 
@@ -44,18 +41,22 @@ new class extends \Livewire\Volt\Component {
 
     public function boot(): void
     {
-//        $this->settings = app(CodeGeneratorSettings::class);
         $this->settings = UserSetting::where('user_id', auth()->id())->first();
-
-        if ($this->settings->startFromGeneratedCode() &&
+        $this->startFromCode = $this->settings->startFromGeneratedCode();
+        $this->lastValidation = GeneratedValidatedCode::where('user_id', auth()->id())
+            ->latest()
+            ->first();
+        // If process starts from code generation, then upload the current active formal model first and then the current active generated code.
+        // If the process starts from the formal model generation, then upload the current active code first and the current active formal model.
+        if ($this->startFromCode &&
             ($formal = GeneratedFormalModel::where('user_id', auth()->id())
                 ->latest()
                 ->first())?->is_active) {
             $this->generatedFormal = $formal;
             $this->generatedCode = $formal->generatedCode;
         } else if (($code = GeneratedCode::where('user_id', auth()->id())
-            ->latest()
-            ->first())?->is_active) {
+                        ->latest()
+                        ->first())?->is_active) {
             $this->generatedCode = $code;
             $this->generatedFormal = $code->formalModel;
         }
@@ -69,7 +70,9 @@ new class extends \Livewire\Volt\Component {
         }
         $validated = app(CodeValidationAction::class)(
             $this->generatedCode,
-            $this->generatedFormal
+            $this->generatedFormal,
+            $this->settings,
+            $this->startFromCode,
         );
         $this->result = $validated->validated_code;
 
@@ -124,20 +127,7 @@ new class extends \Livewire\Volt\Component {
         </x-form>
     @endif
 
-
-    {{--    @if(isset($req))--}}
-    {{--        <div class="chat-message user-message">--}}
-    {{--            <p wire:stream="req">{{ $req }}</p>--}}
-    {{--        </div>--}}
-    {{--    @endif--}}
-    @if(isset($result))
-        <div
-            class="rounded-[10px] p-[15px] gap-[5px] w-fit break-words mr-auto mb-5 bg-[#3864fc] text-white mt-5 max-w-4xl">
-            <code>
-                <pre class="whitespace-pre-wrap">{{ $result }}</pre>
-            </code>
-        </div>
-    @endif
+    <x-display-result :result="$result" :is-code="true" />
 
 </x-card>
 

@@ -13,11 +13,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class GeneratedCode extends Model
 {
-    /** @use HasFactory<GeneratedCode> */
     use HasFactory;
 
     use HasValidatedCode;
     use HasActiveColumn;
+
+    protected $fillable = [
+        'is_active',
+    ];
 
     protected $casts = [
         'programming_language' => ProgrammingLanguage::class,
@@ -29,7 +32,8 @@ class GeneratedCode extends Model
     {
         $setting = UserSetting::where('user_id',auth()->id())->first();
 
-        return tap((new static())
+        /** @phpstan-ignore-next-line */
+        $code = (new static())
             ->forceFill([
                 'generated_formal_model_id' => $generatedFormalId,
                 'user_id' => auth()->id(),
@@ -39,13 +43,15 @@ class GeneratedCode extends Model
                 'programming_language' => $setting->programming_language,
                 'llm_used' => $setting->llm_code,
                 'is_active' => true,
-            ]))
-            ->save();
+            ]);
 
+            $code->save();
+
+            return $code;
     }
 
     /**
-     * @return BelongsTo<GeneratedFormalModel, $this>
+     * @return BelongsTo<GeneratedFormalModel, GeneratedCode>
      */
     public function formalModel(): BelongsTo
     {
@@ -53,7 +59,7 @@ class GeneratedCode extends Model
     }
 
     /**
-     * @return BelongsTo<User>
+     * @return BelongsTo<User, GeneratedCode>
      */
     public function user(): BelongsTo
     {

@@ -6,68 +6,29 @@ use App\Models\GeneratedCode;
 use App\Models\GeneratedFormalModel;
 use App\Models\GeneratedValidatedCode;
 use App\Settings\CodeGeneratorSettings;
+use App\Traits\DataPreparation;
 use Illuminate\Database\Eloquent\Collection;
 use Livewire\Attributes\Computed;
-use Livewire\WithPagination;
+//use Livewire\WithPagination;
 use Maatwebsite\Excel\Facades\Excel;
 
 // @phpstan-ignore-next-line
 new class extends \Livewire\Volt\Component {
-    use withPagination;
+    use DataPreparation;
+//    use withPagination;
 
-//    #[Computed]
     public function validated(): Collection
     {
+        // For the log table get the 10 recent validated codes of the current user.
         return GeneratedValidatedCode::with(['generator' => function ($query) {
-            if ($query->getModel() instanceof GeneratedCode) {
-                $query->with('formalModel'); // Carichiamo solo se è un GeneratedCode
-            }
-            if ($query->getModel() instanceof GeneratedFormalModel) {
-                $query->with('generatedCode'); // Carichiamo solo se è un GeneratedFormalModel
-            }
+            $query->when($query->getModel() instanceof GeneratedCode, fn($q) => $q->with('formalModel'))
+                ->when($query->getModel() instanceof GeneratedFormalModel, fn($q) => $q->with('generatedCode'));
         }])
             ->where('user_id', auth()->id())
             ->latest()
             ->take(10)
             ->get()
-            ->map(function ($item) {
-
-                //parte da formal model
-                if ($item->generator instanceof GeneratedCode) {
-                    $item->user_input = $item->generator->formalModel->requirement;
-                    $item->formal_model = $item->generator->formalModel->generated_formal_model;
-                    $item->formal_LLM = $item->generator->formalModel->llm_used;
-                    $item->formal_model_tool = $item->generator->formalModel->model_tool;
-                    if($item->generator->formalModel->test_case) {
-                        $item->test_cases = $item->generator->formalModel->test_case;
-                    }else{
-                        $item->test_cases = $item->test_case;
-                    }
-                    $item->programming_language = $item->generator->programming_language->name;
-                    $item->first_code = $item->generator->generated_code;
-                    $item->code_LLM = $item->generator->llm_used;
-                }
-
-                //parte da code gen
-                if ($item->generator instanceof GeneratedFormalModel) {
-                    $item->programming_language = $item->generator->generatedCode->programming_language->name;
-                    $item->user_input = $item->generator->generatedCode->requirement;
-                    $item->first_code = $item->generator->generatedCode->generated_code;
-                    $item->code_LLM = $item->generator->generatedCode->llm_used;
-
-                    $item->formal_model = $item->generator->generated_formal_model;
-                    $item->formal_LLM = $item->generator->llm_used;
-                    $item->formal_model_tool = $item->generator->model_tool;
-                    if($item->generator->test_case) {
-                        $item->test_cases = $item->generator->test_case;
-                    }else{
-                        $item->test_cases = $item->test_case;
-                    }
-                }
-                $item->generator_type = $item->generator_type === 'App\Models\GeneratedFormalModel' ? 'Code generation' : 'Formal Model generation';
-//                $item->validation_process = json_encode($item->validation_process, JSON_PRETTY_PRINT);
-                return $item;
-            });
+            ->map(fn($item) => $this->prepareData($item));
     }
 
     public function render(): \Illuminate\Contracts\View\View
@@ -77,11 +38,13 @@ new class extends \Livewire\Volt\Component {
         ]);
     }
 
+    // Export all the current user' data.
     public function export()
     {
         return Excel::download(new ValidatedCodesExport, 'validated-codes-' . now()->format('Y-m-d') . '.xlsx');
     }
 
+    // Export all users' data. To view this option the user must have 'is_admin === true'
     public function exportAll()
     {
         return Excel::download(new ValidatedCodesExportAll, 'validated-codes-' . now()->format('Y-m-d') . '.xlsx');
@@ -107,6 +70,7 @@ new class extends \Livewire\Volt\Component {
             ['key' => 'test_result', 'label' => 'Test result'],
         ];
     }
+
 
 }
 ?>
