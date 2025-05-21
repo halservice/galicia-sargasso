@@ -13,8 +13,9 @@ return new class extends Migration
     {
         Schema::create('generated_codes', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('user_id')->nullable();
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->unsignedBigInteger('generated_formal_model_id')->nullable();
-            $table->unsignedBigInteger('user_id')->constrained()->onDelete('cascade');
             $table->text('system_message');
             $table->text('requirement');
             $table->text('generated_code');

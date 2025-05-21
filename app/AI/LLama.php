@@ -5,6 +5,7 @@ namespace App\AI;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class LLama
 {
@@ -41,8 +42,11 @@ class LLama
             return $response['choices'][0]['message']['content'];
 
         } catch (\Exception $e) {
-            ds('Error in ChatGPT:', $e->getMessage());
-            throw $e;
+            Log::error("Exception while calling OpenAI: {$e->getMessage()}", [
+                'exception' => $e,
+                'trace' => $e->getTraceAsString(),
+            ]);
+            throw new \RuntimeException("Errore durante l'elaborazione della richiesta. Riprova più tardi.");
         }
 
     }

@@ -13,14 +13,14 @@ return new class extends Migration
     {
         Schema::create('generated_formal_models', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('user_id')->nullable();
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->unsignedBigInteger('generated_code_id')->nullable();
-            $table->unsignedBigInteger('user_id');
             $table->text('system_message');
             $table->text('requirement');
             $table->text('generated_formal_model');
             $table->string('model_tool');
             $table->string('llm_used');
-            $table->text('test_case');
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });

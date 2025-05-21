@@ -33,17 +33,12 @@ class CalculateStatsAction
 
             // Get the last message of the assistant.
             $assistantMessage = end($assistantMessages)['content'];
-            // Obtain the number of changes in the last iteration.
-            $numberChanges = $this->checkChanges($assistantMessage);
-            if ($numberChanges != -1) {
-                $lastIteration = $numberChanges;
-            } else {
-                $lastIteration = $this->checkFailedTest($assistantMessage);
-            }
+            // Obtain the number of failed test in the last iteration.
+            $lastIteration = $this->checkFailedTest($assistantMessage);
 
-            // If the number of changes in the last iteration is 0 then the final result is a correct code.
+            // If the number of failed test in the last iteration is 0 then the final result is a correct code.
             // Meaning there is a +1 right process & we must update the count for the iteration.
-            // If the number of changes in the last iteration is not 0 then the final result is not corret.
+            // If the number of failed test in the last iteration is not 0 then the final result is not corret.
             // Meaning there is an increase of wrong process.
             if ($lastIteration === 0) {
                 $this->correctProcess++;

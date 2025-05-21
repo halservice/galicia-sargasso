@@ -13,7 +13,8 @@ return new class extends Migration {
     {
         Schema::create('user_settings', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->unsignedBigInteger('user_id')->nullable();
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->string('programming_language')->default( ProgrammingLanguage::PHP->value);
             $table->string('model_tool')->default(ModelTool::NuSMV->value);
             $table->string('llm_code')->default(LLM::ChatGPT_4o->value);
@@ -22,6 +23,7 @@ return new class extends Migration {
             $table->integer('iteration')->default(2);
             $table->string('sequence')->default(Sequence::Code_Formal_Validation->value);
             $table->timestamps();
+
         });
     }
 

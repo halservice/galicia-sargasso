@@ -24,7 +24,6 @@ class GeneratedFormalModelFactory extends Factory
             'model_tool' => ModelTool::random(),
             'generated_formal_model' => fake()->sentence,
             'llm_used' => LLM::random(),
-            'test_case' => fake()->sentence,
         ];
     }
 }

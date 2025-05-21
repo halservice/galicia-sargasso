@@ -27,7 +27,7 @@ new class extends \Livewire\Volt\Component {
         $status = Password::sendResetLink(['email' => $this->email]);
 
         if ($status === Password::RESET_LINK_SENT) {
-            session()->flash('success', 'Password reset link sent to your email.');
+            session()->flash('success', 'Password reset link sent to your email. If you don’t see it, please check your spam or junk folder.');
         } else {
             $this->addError('email','Please try again later.');
         }

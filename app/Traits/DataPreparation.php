@@ -35,7 +35,7 @@ trait DataPreparation
         $item->formal_model = $formalModel->generated_formal_model ?? '';
         $item->formal_LLM = $formalModel->llm_used ?? '';
         $item->formal_model_tool = $formalModel->model_tool ?? '';
-        $item->test_cases = $formalModel->test_case ?? $item->test_case ?? ''; // Correction for version
+        $item->test_cases = $item->test_case ?? '';
         $item->programming_language = $item->generator->programming_language->value ?? '';
         $item->first_code = $item->generator->generated_code ?? '';
         $item->code_LLM = $item->generator->llm_used ?? '';
@@ -52,7 +52,7 @@ trait DataPreparation
         $item->formal_model = $item->generator->generated_formal_model ?? '';
         $item->formal_LLM = $item->generator->llm_used ?? '';
         $item->formal_model_tool = $item->generator->model_tool ?? '';
-        $item->test_cases = $item->generator->test_case ?? $item->test_case ?? ''; // Correction for version
+        $item->test_cases = $item->test_case ?? '';
     }
 
     public static function getHeadings(): array

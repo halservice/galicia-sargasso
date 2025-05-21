@@ -4,7 +4,6 @@ namespace App\Models;
 
 use App\Enums\LLM;
 use App\Enums\ProgrammingLanguage;
-use App\Settings\CodeGeneratorSettings;
 use App\Traits\HasActiveColumn;
 use App\Traits\HasValidatedCode;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

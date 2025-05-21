@@ -20,8 +20,4 @@ class CodeGeneratorSettings extends Settings
         return 'generator';
     }
 
-    public function startFromGeneratedCode(): bool
-    {
-        return $this->sequence === 'code-first';
-    }
 }

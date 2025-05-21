@@ -1,11 +1,11 @@
 services:
     laravel.test:
         build:
-            context: './vendor/laravel/sail/runtimes/8.4'
+            context: ./vendor/laravel/sail/runtimes/8.4
             dockerfile: Dockerfile
             args:
                 WWWGROUP: '${WWWGROUP}'
-        image: 'sail-8.4/app'
+        image: sail-8.4/app
         extra_hosts:
             - 'host.docker.internal:host-gateway'
         ports:
@@ -27,7 +27,7 @@ services:
     pgsql:
         image: 'postgres:17'
         ports:
-            - '5435:5432'
+            - '5432:5432'
         environment:
             PGPASSWORD: '${DB_PASSWORD:-secret}'
             POSTGRES_DB: '${DB_DATABASE}'
@@ -39,7 +39,9 @@ services:
         networks:
             - sail
         healthcheck:
-            test: ["CMD-SHELL", "pg_isready -q -d $${DB_DATABASE} -U $${DB_USERNAME}"]
+            test:
+                - CMD-SHELL
+                - 'pg_isready -q -d $${DB_DATABASE} -U $${DB_USERNAME}'
             retries: 3
             timeout: 5s
     mailpit:

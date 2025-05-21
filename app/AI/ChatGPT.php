@@ -42,8 +42,11 @@ class ChatGPT
                 ?? throw new \Exception("Unexpected response from the AI service.");
 
         } catch (\Throwable $e) {
-            Log::error("Exception while calling OpenAI: " . $e->getMessage());
-            throw new \Exception("An error occurred while processing your request. Please try again later.");
+            Log::error("Exception while calling OpenAI: {$e->getMessage()}", [
+                'exception' => $e,
+                'trace' => $e->getTraceAsString(),
+            ]);
+            throw new \RuntimeException("Errore durante l'elaborazione della richiesta. Riprova più tardi.");
         }
 
     }
